@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(node -e 'let d=\"\";process.stdin.on(\"data\",c=>d+=c);process.stdin.on(\"end\",()=>{try{console.log(JSON.parse(d).tool_input.file_path||\"\");}catch(e){console.log(\"\");}})');(echo \"$f\" | grep -qiE \"\\.tsx?$\" && echo \"$f\" | grep -qi \"contentforge\" && cd \"C:/Personal_Development/TheTestingAcademy/AI3xBatch/chapter_04_AI_Agents_n8n/social_ai_agent/contentforge\" && npm run typecheck) || true",
+            "timeout": 60,
+            "statusMessage": "Type-checking ContentForge..."
+          }
+        ]
+      }
+    ]
+  }
+}

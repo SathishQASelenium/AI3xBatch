@@ -1,0 +1,30 @@
+# Maven / Java
+target/
+*.class
+*.jar
+*.war
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local Claude config (settings.local.json may contain credentials)
+.claude/settings.local.json
+CLAUDE.local.md
+
+# IDE / editor scratch
+.commandcode/
+.env
+env
+
+# Local browser verification artifacts
+.playwright-mcp/
