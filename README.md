@@ -51,6 +51,18 @@ mindmap
       Skillfile content generation
         The Testing Academy voice
         Dated output packs
+    Ch 05 - AI Agents with LangFlow
+      Flaky Test Analyzer agent
+      API Contract Validator agent
+      React UI over LangFlow REST API
+    Ch 06 - AI Social Media Content Creation
+      Hook-Story-Offer planning
+      7 platform templates
+      Universal voice rules
+    Ch 07 - RAG
+      RAG Explorer app
+      Nomic embed + ChromaDB
+      Groq grounded answers
     Project - Job Tracker AI
       Local-first React Kanban board
       IndexedDB persistence
@@ -112,6 +124,29 @@ mindmap
 │   └── skillfile_content_generation/
 │       ├── SKILL.md               The Testing Academy content engine
 │       └── output/                Dated publish-ready content packs
+│
+├── chapter_05_AI_Agents_LangFlow/  LangFlow-built QA agents
+│   ├── README.md
+│   ├── LangFlow vs LangGraph vs LangSmith.md
+│   ├── Project/                   Importable LangFlow flow JSONs
+│   └── flaky_test_analyzer_ai_Agent/
+│       ├── result1.json / result2.json   Sample Playwright run pairs
+│       └── ui/                    React UI proxied to LangFlow (:7861)
+│
+├── chapter_06_AI_Social_Media_Content_Creation/  Repurpose one idea across 7 platforms
+│   ├── README.md
+│   ├── 00_Hook_Story_Offer_Planning.md   Plan once — source of truth
+│   └── 01..07_*.md                Per-platform templates (YouTube, IG, Medium, Blog, LinkedIn…)
+│
+├── chapter_07_RAG/                Retrieval-Augmented Generation demo
+│   ├── README.md
+│   ├── RAG_Explorer.jpg
+│   └── Basic_RAG/
+│       ├── prompt/prompt.md       Original build spec
+│       ├── data/                  Source PDF(s) to ingest
+│       └── rag-explorer/          React + Express RAG pipeline app
+│           ├── server/lib/        chunk.js, embed.js, chroma.js, groq.js, pdf.js
+│           └── src/                Pipeline visualisation UI (Vite + React)
 │
 └── Project_Job_TRACKERAI/         Local-first job application tracker
     ├── README.md
@@ -401,6 +436,84 @@ Open `chapter_04_AI_Agents_n8n/skillfile_content_generation/output/2026-06-14/` 
 
 ---
 
+## Chapter 05 — AI Agents with LangFlow
+
+LangFlow is a visual, low-code builder for LLM apps and agents — wire components on a canvas,
+test the flow live, then call it over a REST endpoint (`POST /api/v1/run/{flowId}`) from any
+front end or CI job. This chapter builds two real QA agents on top of that API:
+
+- **Flaky Test Analyzer** — compares two Playwright `results.json` runs and reports genuine
+  flaky tests vs. consistent failures, with a React UI and rerun recommendations.
+- **API Contract Validator** — calls a live endpoint and validates the response against a JSON
+  Schema using an OpenRouter model, catching contract drift without per-endpoint assertion code.
+
+**Run the Flaky Test Analyzer UI:**
+```bash
+cd chapter_05_AI_Agents_LangFlow/flaky_test_analyzer_ai_Agent/ui
+npm install
+npm run dev          # http://localhost:5173, proxies LangFlow at :7861
+```
+
+LangFlow must be running locally with the agent flow imported (`Project/002_Flaky_Test_AIAgent.json`).
+See `chapter_05_AI_Agents_LangFlow/README.md` for full flow details and example verdicts.
+
+---
+
+## Chapter 06 — AI Social Media Content Creation
+
+Fill-in-the-blank templates that turn **one idea** into a publish-ready pack across seven
+platforms — plan once (Hook–Story–Offer), then repurpose everywhere instead of writing seven
+things from scratch.
+
+| # | Template | Use it for |
+|---|----------|-----------|
+| 00 | Hook · Story · Offer Planning | Plan any idea before writing a single post |
+| 01 | YouTube Video | Long/short-form video script |
+| 02 | Instagram Reel | Vertical short video + on-screen text |
+| 03 | Instagram Post | Single-image post + caption |
+| 04 | Instagram Carousel | 7–9 slide reference card |
+| 05 | Medium Article | Long-form article (1,500–3,500 words) |
+| 06 | Blog Post | SEO-aware blog post |
+| 07 | LinkedIn Post | LinkedIn post + publishing notes |
+
+Universal voice rules (senior-colleague-over-chai tone, no banned buzzwords, no fabricated
+stats) apply across every template. See `chapter_06_AI_Social_Media_Content_Creation/README.md`.
+
+---
+
+## Chapter 07 — RAG
+
+A hands-on **Retrieval-Augmented Generation** demo, end to end, with a React UI that shows every
+stage of the pipeline instead of hiding it behind a single "ask a question" box:
+
+```
+PDF  →  Chunk  →  Nomic Embed  →  ChromaDB  →  Retrieve top-4  →  Groq answer
+```
+
+![RAG Explorer UI](chapter_07_RAG/RAG_Explorer.jpg)
+
+- **Embeddings:** `nomic-embed-text` via local **Ollama** — no API key, runs offline.
+- **Vector store:** local **ChromaDB** server (cosine similarity).
+- **LLM:** **Groq** `openai/gpt-oss-120b` for the grounded final answer.
+
+**Why a QA engineer should care:** it's the same "generate from a source doc" shape as Chapter 02,
+except every intermediate step is visible — chunk boundaries, a real embedding vector, similarity
+scores — which is what lets you debug a RAG agent that hallucinates or misses an obvious answer.
+
+**Run it:**
+```bash
+cd chapter_07_RAG/Basic_RAG/rag-explorer
+npm install
+cp .env.example .env      # paste your GROQ_API_KEY into .env
+npm run dev                # ChromaDB (:8000) + Express API (:8787) + Vite UI (:5175)
+```
+
+Requires Ollama running with `nomic-embed-text` pulled, and `pip install chromadb` for the
+`chroma` CLI. Full architecture, config table, and troubleshooting in
+`chapter_07_RAG/README.md` and `chapter_07_RAG/Basic_RAG/rag-explorer/README.md`.
+
+---
+
 ## Project - Job Tracker AI
 
 `Project_Job_TRACKERAI/` is a local-first job application tracker built as a Vite + React single-page app. It stores every job card in the browser with IndexedDB through the `idb` library, so there is no backend, authentication, or external database.
@@ -435,6 +548,10 @@ You can read it linearly (chapter 01 → 04) or jump straight to a project:
 - **"I want reusable QA automation agents."** → `chapter_04_AI_Agents_n8n/n8n_AIAgent/`.
 - **"I want a local AI content dashboard."** → `chapter_04_AI_Agents_n8n/social_ai_agent/contentforge/`.
 - **"I want publish-ready Testing Academy content."** → `chapter_04_AI_Agents_n8n/skillfile_content_generation/output/`.
+- **"I want an agent that flags flaky tests from two Playwright runs."** → `chapter_05_AI_Agents_LangFlow/flaky_test_analyzer_ai_Agent/`.
+- **"I want to catch API contract drift without writing assertions."** → `chapter_05_AI_Agents_LangFlow/Project/003_Bug_Triage_AI_Agent.json` / `004_API_Contract_Validator.json`.
+- **"I want to turn one idea into a week of social content."** → `chapter_06_AI_Social_Media_Content_Creation/00_Hook_Story_Offer_Planning.md`.
+- **"I want to see a RAG pipeline work end-to-end, not just call an API."** → `chapter_07_RAG/`.
 - **"I want to track job applications locally."** → `Project_Job_TRACKERAI/`.
 
 ## Requirements
@@ -444,6 +561,8 @@ You can read it linearly (chapter 01 → 04) or jump straight to a project:
 - For Chapter 3: **Node.js 18+**, npm, Jira API credentials, and a GROQ API key.
 - For Chapter 4 n8n workflows: n8n Cloud or self-hosted n8n, plus credentials for whichever workflow nodes you enable.
 - For Chapter 4 ContentForge: **Node.js 20+**, npm, `GROQ_API_KEY`, and `GEMINI_API_KEY`.
+- For Chapter 5: a running **LangFlow** instance (Cloud or self-hosted) with the chapter's flows imported, plus **Node.js 18+** for the Flaky Test Analyzer UI.
+- For Chapter 7: **Node.js 20+**, local **Ollama** with `nomic-embed-text` pulled, Python `chromadb` package (`pip install chromadb`), and a `GROQ_API_KEY`.
 - For Job Tracker AI: **Node.js 20.19+ or 22.12+** and npm for Vite 8.
 
 ## Chapter History
