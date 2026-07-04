@@ -26,7 +26,22 @@ export default function App() {
 
   const refreshStatus = () => api.getStatus().then(setStatus).catch((e) => setError(e.message))
 
-  useEffect(() => { refreshStatus() }, [])
+  // `npm run dev` starts ChromaDB, the API, and Vite concurrently — Chroma's
+  // binary takes a few seconds longer to bind :8000 than the others, so the
+  // first status check can catch it still starting up. Poll until it's up
+  // (or give up after 20s) instead of leaving a stale "not reachable" alert.
+  useEffect(() => {
+    let attempts = 0
+    const id = setInterval(() => {
+      attempts += 1
+      api.getStatus().then((data) => {
+        setStatus(data); setError('')
+        if (data?.chroma?.up || attempts >= 10) clearInterval(id)
+      }).catch((e) => setError(e.message))
+    }, 2000)
+    refreshStatus()
+    return () => clearInterval(id)
+  }, [])
 
   // reflect ingested state in the pipeline lights on load
   useEffect(() => {
