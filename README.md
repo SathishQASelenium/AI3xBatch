@@ -143,7 +143,7 @@ mindmap
 │   ├── RAG_Explorer.jpg
 │   └── Basic_RAG/
 │       ├── prompt/prompt.md       Original build spec
-│       ├── data/                  Source PDF(s) to ingest
+│       ├── data/                  Source PDF/TXT files to ingest (also the UI upload target)
 │       └── rag-explorer/          React + Express RAG pipeline app
 │           ├── server/lib/        chunk.js, embed.js, chroma.js, groq.js, pdf.js
 │           └── src/                Pipeline visualisation UI (Vite + React)
@@ -487,11 +487,15 @@ A hands-on **Retrieval-Augmented Generation** demo, end to end, with a React UI 
 stage of the pipeline instead of hiding it behind a single "ask a question" box:
 
 ```
-PDF  →  Chunk  →  Nomic Embed  →  ChromaDB  →  Retrieve top-4  →  Groq answer
+PDF/TXT  →  Chunk  →  Nomic Embed  →  ChromaDB  →  Retrieve top-k  →  Groq answer
 ```
 
 ![RAG Explorer UI](chapter_07_RAG/RAG_Explorer.jpg)
 
+- **Ingestion:** drop `.pdf`/`.txt` files into `Basic_RAG/data/`, or use the **Upload PDF/TXT**
+  button in the UI to add them from the browser (saved server-side, 20MB cap). Ships with two
+  sample docs — a VWO PRD and a Restful-booker API spec — and **Ingest Docs** processes every
+  supported file in one pass.
 - **Embeddings:** `nomic-embed-text` via local **Ollama** — no API key, runs offline.
 - **Vector store:** local **ChromaDB** server (cosine similarity).
 - **LLM:** **Groq** `openai/gpt-oss-120b` for the grounded final answer.
@@ -505,12 +509,11 @@ scores — which is what lets you debug a RAG agent that hallucinates or misses 
 cd chapter_07_RAG/Basic_RAG/rag-explorer
 npm install
 cp .env.example .env      # paste your GROQ_API_KEY into .env
-npm run dev                # ChromaDB (:8000) + Express API (:8787) + Vite UI (:5175)
+npm run dev                # ChromaDB (:8000) + Express API (:8787) + Vite UI (:5173+)
 ```
 
 Requires Ollama running with `nomic-embed-text` pulled, and `pip install chromadb` for the
-`chroma` CLI. Full architecture, config table, and troubleshooting in
-`chapter_07_RAG/README.md` and `chapter_07_RAG/Basic_RAG/rag-explorer/README.md`.
+`chroma` CLI. Full architecture, config table, and troubleshooting in `chapter_07_RAG/README.md`.
 
 ---
 
