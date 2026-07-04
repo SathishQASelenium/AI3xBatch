@@ -22,6 +22,7 @@ export default function App() {
   const [result, setResult] = useState(null)
   const [showPrompt, setShowPrompt] = useState(false)
   const [error, setError] = useState('')
+  const [uploading, setUploading] = useState(false)
 
   const refreshStatus = () => api.getStatus().then(setStatus).catch((e) => setError(e.message))
 
@@ -73,6 +74,21 @@ export default function App() {
     }
   }
 
+  async function handleUpload(e) {
+    const file = e.target.files?.[0]
+    e.target.value = '' // allow re-selecting the same file
+    if (!file) return
+    setError(''); setUploading(true)
+    try {
+      await api.uploadFile(file)
+      await refreshStatus()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setUploading(false)
+    }
+  }
+
   async function handleReset() {
     await api.reset().catch(() => {})
     setIngest(null); setResult(null); setStageState({}); refreshStatus()
@@ -112,8 +128,12 @@ export default function App() {
           <div className="panel-head">
             <h2>1 · Ingestion</h2>
             <div className="panel-actions">
+              <label className="btn ghost file-btn">
+                {uploading ? 'Uploading…' : 'Upload PDF/TXT'}
+                <input type="file" accept=".pdf,.txt" hidden onChange={handleUpload} disabled={uploading} />
+              </label>
               <button className="btn primary" onClick={handleIngest} disabled={ingesting}>
-                {ingesting ? 'Ingesting…' : 'Ingest PDF'}
+                {ingesting ? 'Ingesting…' : 'Ingest Docs'}
               </button>
               {ready && <button className="btn ghost" onClick={handleReset} disabled={ingesting}>Reset</button>}
             </div>
@@ -122,8 +142,8 @@ export default function App() {
           <div className="source">
             <span className="muted">Source folder:</span> <code>{status?.dataDir || 'data/'}</code>
             <ul className="file-list">
-              {(status?.pdfs || []).map((f) => <li key={f}>📄 {f}</li>)}
-              {!status?.pdfs?.length && <li className="muted">no PDFs found</li>}
+              {(status?.docs || []).map((f) => <li key={f}>📄 {f}</li>)}
+              {!status?.docs?.length && <li className="muted">no PDF/TXT files found — upload one above</li>}
             </ul>
           </div>
 

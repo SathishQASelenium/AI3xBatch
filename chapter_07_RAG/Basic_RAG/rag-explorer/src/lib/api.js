@@ -12,6 +12,12 @@ export const getStatus = () => fetch('/api/status').then(jsonOrThrow)
 export const ingest = () =>
   fetch('/api/ingest', { method: 'POST' }).then(jsonOrThrow)
 
+export const uploadFile = (file) => {
+  const form = new FormData()
+  form.append('file', file)
+  return fetch('/api/upload', { method: 'POST', body: form }).then(jsonOrThrow)
+}
+
 export const query = (question) =>
   fetch('/api/query', {
     method: 'POST',

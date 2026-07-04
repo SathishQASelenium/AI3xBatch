@@ -1,10 +1,12 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
+import multer from 'multer'
+import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { listPdfs, extractPdf } from './lib/pdf.js'
+import { listDocs, extractDoc } from './lib/pdf.js'
 import { chunkText } from './lib/chunk.js'
 import { embedTexts, embedInfo } from './lib/embed.js'
 import { getCollection, resetCollection, storeChunks, retrieve, countChunks, pingChroma } from './lib/chroma.js'
@@ -24,10 +26,32 @@ app.use(express.json({ limit: '2mb' }))
 // Remembers the last ingestion so the UI can render the pipeline state.
 let lastIngest = null
 
+// --- Upload: accept .pdf / .txt, save into the data dir ---------------------
+const ALLOWED_EXT = new Set(['.pdf', '.txt'])
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      fs.mkdirSync(DATA_DIR, { recursive: true })
+      cb(null, DATA_DIR)
+    },
+    filename: (req, file, cb) => cb(null, path.basename(file.originalname)),
+  }),
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase()
+    cb(null, ALLOWED_EXT.has(ext)) // silently reject unsupported types; handler reports "no file"
+  },
+})
+
 const wrap = (fn) => (req, res) => fn(req, res).catch((err) => {
   console.error(err)
   res.status(500).json({ error: err.message || String(err) })
 })
+
+app.post('/api/upload', upload.single('file'), wrap(async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded (or unsupported type — use .pdf/.txt)' })
+  res.json({ file: req.file.filename, size: req.file.size })
+}))
 
 // --- Status: what's wired up, what's ingested -------------------------------
 app.get('/api/status', wrap(async (req, res) => {
@@ -39,7 +63,7 @@ app.get('/api/status', wrap(async (req, res) => {
   }
   res.json({
     dataDir: DATA_DIR,
-    pdfs: listPdfs(DATA_DIR).map((p) => p.file),
+    docs: listDocs(DATA_DIR).map((p) => p.file),
     embed: embedInfo,
     llm: groqInfo,
     groqKeySet: Boolean(process.env.GROQ_API_KEY),
@@ -49,20 +73,20 @@ app.get('/api/status', wrap(async (req, res) => {
   })
 }))
 
-// --- Ingest: PDF -> chunk -> embed -> store ---------------------------------
+// --- Ingest: doc (PDF/TXT) -> chunk -> embed -> store -----------------------
 app.post('/api/ingest', wrap(async (req, res) => {
-  const pdfs = listPdfs(DATA_DIR)
-  if (!pdfs.length) return res.status(400).json({ error: `No PDFs found in ${DATA_DIR}` })
+  const docs = listDocs(DATA_DIR)
+  if (!docs.length) return res.status(400).json({ error: `No PDF/TXT files found in ${DATA_DIR}` })
 
   const collection = await resetCollection() // fresh store each ingest
   const files = []
   let allChunks = []
 
-  for (const pdf of pdfs) {
-    const { text, numPages } = await extractPdf(pdf.path)
+  for (const doc of docs) {
+    const { text, numPages } = await extractDoc(doc.path)
     const chunks = chunkText(text, { size: CHUNK_SIZE, overlap: CHUNK_OVERLAP })
-    chunks.forEach((c) => { c.file = pdf.file })
-    files.push({ file: pdf.file, numPages, chars: text.length, numChunks: chunks.length })
+    chunks.forEach((c) => { c.file = doc.file })
+    files.push({ file: doc.file, numPages, chars: text.length, numChunks: chunks.length })
     allChunks = allChunks.concat(chunks)
   }
 

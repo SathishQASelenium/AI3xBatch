@@ -4,12 +4,14 @@ import path from 'node:path'
 // on import that looks for a test file and throws. The lib entry is clean.
 import pdfParse from 'pdf-parse/lib/pdf-parse.js'
 
-// Lists every *.pdf in the data directory.
-export function listPdfs(dataDir) {
+const SUPPORTED_EXT = ['.pdf', '.txt']
+
+// Lists every supported document (*.pdf, *.txt) in the data directory.
+export function listDocs(dataDir) {
   if (!fs.existsSync(dataDir)) return []
   return fs
     .readdirSync(dataDir)
-    .filter((f) => f.toLowerCase().endsWith('.pdf'))
+    .filter((f) => SUPPORTED_EXT.includes(path.extname(f).toLowerCase()))
     .map((f) => ({ file: f, path: path.join(dataDir, f) }))
 }
 
@@ -22,4 +24,17 @@ export async function extractPdf(filePath) {
     numPages: data.numpages || 0,
     info: data.info || {},
   }
+}
+
+// Extracts raw text from a plain-text file.
+export function extractTxt(filePath) {
+  const text = fs.readFileSync(filePath, 'utf-8')
+  return { text, numPages: 1, info: {} }
+}
+
+// Dispatches to the right extractor based on file extension.
+export async function extractDoc(filePath) {
+  return path.extname(filePath).toLowerCase() === '.txt'
+    ? extractTxt(filePath)
+    : extractPdf(filePath)
 }

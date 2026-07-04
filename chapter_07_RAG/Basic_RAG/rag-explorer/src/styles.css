@@ -70,6 +70,7 @@ h1::before { content: '◆'; color: var(--gold); margin-right: 8px; }
 .btn.primary { background: var(--gold); color: #1a1200; border-color: var(--gold); }
 .btn.primary:hover:not(:disabled) { filter: brightness(1.08); }
 .btn.ghost { background: transparent; }
+.file-btn { display: inline-flex; align-items: center; }
 .link { background: none; border: none; color: var(--blue); cursor: pointer; font-size: 12.5px; padding: 6px 0; text-align: left; }
 .link:hover { text-decoration: underline; }
 
