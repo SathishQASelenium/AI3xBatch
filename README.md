@@ -141,6 +141,9 @@ mindmap
 ├── chapter_07_RAG/                Retrieval-Augmented Generation demo
 │   ├── README.md
 │   ├── RAG_Explorer.jpg
+│   ├── Basic_RAG_n8n.jpg
+│   ├── n8n_Basic_RAG/
+│   │   └── AI3X_Basic_RAG.json    n8n workflow — Pinecone-backed RAG, no-code
 │   └── Basic_RAG/
 │       ├── prompt/prompt.md       Original build spec
 │       ├── data/                  Source PDF/TXT files to ingest (also the UI upload target)
@@ -514,6 +517,28 @@ npm run dev                # ChromaDB (:8000) + Express API (:8787) + Vite UI (:
 
 Requires Ollama running with `nomic-embed-text` pulled, and `pip install chromadb` for the
 `chroma` CLI. Full architecture, config table, and troubleshooting in `chapter_07_RAG/README.md`.
+
+### No-code variant: RAG in n8n
+
+Same RAG shape, built as an **n8n workflow** instead of hand-written code — for learners who want
+the pipeline without writing a backend.
+
+![Basic RAG n8n workflow](chapter_07_RAG/Basic_RAG_n8n.jpg)
+
+```
+Form Upload  →  Recursive Character Text Splitter  →  OpenAI Embeddings  →  Pinecone (insert)
+Chat Trigger →  RAG Agent (gpt-5-mini)  →  Pinecone (retrieve-as-tool, top-3)  →  Answer + citation
+```
+
+- **Phase 1 — Ingestion:** an n8n **Form Trigger** accepts PDF/CSV/JSON/DOCX/TXT/HTML uploads,
+  chunks them with `chunkOverlap: 200`, embeds via **OpenAI embeddings**, and inserts into a
+  **Pinecone** index (`ai3x-1536`).
+- **Phase 2 — RAG Fetching:** a **Chat Trigger** feeds a LangChain **Agent** (`gpt-5-mini` brain +
+  buffer-window memory) that calls Pinecone as a retrieval tool (top-k = 3) and is prompted to
+  answer **only** from retrieved documents, citing the source `fileName`, or say
+  *"I couldn't find that in the uploaded documents."*
+- Import `chapter_07_RAG/n8n_Basic_RAG/AI3X_Basic_RAG.json` into n8n and wire up your own OpenAI
+  and Pinecone credentials (the JSON ships with placeholder credential IDs, not real keys).
 
 ---
 
