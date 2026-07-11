@@ -63,6 +63,8 @@ mindmap
       RAG Explorer app
       Nomic embed + ChromaDB
       Groq grounded answers
+      n8n no-code variant (Pinecone)
+      LangFlow no-code variant (Ollama/OpenAI + Groq)
     Project - Job Tracker AI
       Local-first React Kanban board
       IndexedDB persistence
@@ -144,6 +146,10 @@ mindmap
 │   ├── Basic_RAG_n8n.jpg
 │   ├── n8n_Basic_RAG/
 │   │   └── AI3X_Basic_RAG.json    n8n workflow — Pinecone-backed RAG, no-code
+│   ├── LangFlow_RAG/
+│   │   ├── AI_3x_Naive_RAG_Ollama_Groq.json     LangFlow — Ollama embeddings + Groq LLM
+│   │   ├── AI_3X_Naive RAG Uploaded.json        LangFlow — OpenAI embeddings + OpenAI LLM
+│   │   └── AI_3X_Naive RAG_Improve_Chunk.json   LangFlow — OpenAI, split ingest/query, tuned chunking
 │   └── Basic_RAG/
 │       ├── prompt/prompt.md       Original build spec
 │       ├── data/                  Source PDF/TXT files to ingest (also the UI upload target)
@@ -539,6 +545,30 @@ Chat Trigger →  RAG Agent (gpt-5-mini)  →  Pinecone (retrieve-as-tool, top-3
   *"I couldn't find that in the uploaded documents."*
 - Import `chapter_07_RAG/n8n_Basic_RAG/AI3X_Basic_RAG.json` into n8n and wire up your own OpenAI
   and Pinecone credentials (the JSON ships with placeholder credential IDs, not real keys).
+
+### No-code variant: RAG in LangFlow
+
+Same RAG shape again, this time built visually in **LangFlow**. Three exported flows in
+`chapter_07_RAG/LangFlow_RAG/` show the pipeline evolving from a first pass to a tuned one:
+
+![LangFlow RAG pipeline](chapter_07_RAG/Langflow_RAG.jpg)
+
+```
+File (PDF/TXT) → Split Text (chunk) → Embeddings → Chroma DB (ingest)
+
+Chat Input (question) → Chroma DB (retrieve top-k) → Prompt Template (context + question) → LLM → Chat Output
+```
+
+- **`AI_3x_Naive_RAG_Ollama_Groq.json`** — local **Ollama** (`nomic-embed-text`) embeds both the
+  ingested chunks and the incoming question; **Groq** is the language model that generates the
+  grounded answer. Fully local embedding step, hosted inference for the final answer.
+- **`AI_3X_Naive RAG Uploaded.json`** — swaps in **OpenAI embeddings** and **OpenAI** as the
+  language model; ingest and query share a single Chroma DB component.
+- **`AI_3X_Naive RAG_Improve_Chunk.json`** — same OpenAI stack, but ingest and query each get
+  their own dedicated embedding + Chroma DB component instead of sharing one, plus an extra
+  Parser stage after retrieval — a tuned-chunking iteration on the naive flow.
+- Import any of the three JSON files into LangFlow and wire up your own Ollama/OpenAI/Groq
+  credentials (exports carry component IDs, not live keys).
 
 ---
 
