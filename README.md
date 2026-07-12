@@ -64,7 +64,8 @@ mindmap
       Nomic embed + ChromaDB
       Groq grounded answers
       n8n no-code variant (Pinecone)
-      LangFlow no-code variant (Ollama/OpenAI + Groq)
+      LangFlow no-code variant (Ollama/OpenAI/Mistral + Groq)
+      LangFlow RAG Explorer chat UI (thin React client over LangFlow REST API)
     Project - Job Tracker AI
       Local-first React Kanban board
       IndexedDB persistence
@@ -144,6 +145,10 @@ mindmap
 │   ├── README.md
 │   ├── RAG_Explorer.jpg
 │   ├── Basic_RAG_n8n.jpg
+│   ├── Langflow_RAG.jpg                          LangFlow canvas — Ollama-embeddings iteration
+│   ├── Langflow-Task-Testcases-Mistral-Groq.png  LangFlow canvas — final Mistral+Groq flow
+│   ├── Langflow-Task-Testcases-Mistral-Groq-Results.png     LangFlow Playground — 3 demo Q&As
+│   ├── Langflow-Task-Testcases-Mistral-Groq-UI-Results.png  rag-explorer chat UI — same Q&As
 │   ├── n8n_Basic_RAG/
 │   │   └── AI3X_Basic_RAG.json    n8n workflow — Pinecone-backed RAG, no-code
 │   ├── LangFlow_RAG/
@@ -151,10 +156,15 @@ mindmap
 │   │   ├── AI_3X_Naive RAG Uploaded.json        LangFlow — OpenAI embeddings + OpenAI LLM
 │   │   ├── AI_3X_Naive RAG_Improve_Chunk.json   LangFlow — OpenAI, split ingest/query, tuned chunking
 │   │   ├── AI_3X_Naive RAG_Task11July2026.json  LangFlow — Mistral embeddings + Groq LLM, QA test-case CSV as source
-│   │   ├── prompt/prompt.md                     Sample questions used against the test-case RAG
-│   │   └── data/
-│   │       ├── VWO_500_Test_Cases.csv           Source data — VWO PRD-derived test cases
-│   │       └── Ecommerce_1000_Test_Cases.csv    Source data — e-commerce test cases (scenario/priority/automation columns)
+│   │   ├── prompt/
+│   │   │   ├── prompt.md                        Sample questions used against the test-case RAG
+│   │   │   └── prompt-final.md                  Build spec for the rag-explorer chat UI below
+│   │   ├── data/
+│   │   │   ├── VWO_500_Test_Cases.csv           Source data — VWO PRD-derived test cases
+│   │   │   └── Ecommerce_1000_Test_Cases.csv    Source data — e-commerce test cases (scenario/priority/automation columns)
+│   │   └── rag-explorer/                        React + Vite chat UI over the LangFlow REST API
+│   │       ├── vite.config.js                   /api/chat proxy, server-side x-api-key injection
+│   │       └── src/                             Chat bubbles, pipeline banner, suggestion chips
 │   └── Basic_RAG/
 │       ├── prompt/prompt.md       Original build spec
 │       ├── data/                  Source PDF/TXT files to ingest (also the UI upload target)
@@ -587,6 +597,43 @@ Chat Input (question) → Chroma DB (retrieve top-k) → Prompt Template (contex
 - Import any of the four JSON files into LangFlow and wire up your own Ollama/OpenAI/Mistral/Groq
   credentials (exports carry component IDs, not live keys).
 
+### LangFlow RAG Explorer — chat UI over the LangFlow REST API
+
+`chapter_07_RAG/LangFlow_RAG/rag-explorer` is a thin **React + Vite** chat UI wired to the
+`AI_3X_Naive RAG_Task11July2026.json` flow above (Mistral embeddings + Groq). Unlike the Basic RAG
+Explorer, this app has **no backend of its own** — LangFlow does all retrieval and generation;
+the app only calls LangFlow's REST API and renders the answer:
+
+```
+File → Parser → Split Text → Mistral Embeddings → ChromaDB (top 10)
+     → Prompt Template → Groq llama-3.3-70b-versatile → Chat Output
+```
+
+![LangFlow RAG Explorer UI — same demo questions, real chat app](chapter_07_RAG/Langflow-Task-Testcases-Mistral-Groq-UI-Results.png)
+
+- Browser calls same-origin `POST /api/chat`; Vite's dev proxy (`vite.config.js`) rewrites it to
+  `POST http://localhost:7860/api/v1/run/<flowId>?stream=false` and attaches the `x-api-key`
+  header **server-side**, so the key never appears in a browser network call.
+- Answer text is defensively extracted from `outputs[0].outputs[0].results.message.text`; if
+  LangFlow's response shape ever changes, the UI falls back to a collapsible raw-JSON block
+  instead of a blank bubble.
+- Ships the same three sample questions as clickable chips, and reuses one `session_id` per
+  browser tab so LangFlow keeps a single chat history thread.
+
+**Run it:**
+```bash
+cd chapter_07_RAG/LangFlow_RAG/rag-explorer
+npm install
+cp .env.example .env      # VITE_LANGFLOW_BASE_URL / _FLOW_ID / _API_KEY
+npm run dev                 # http://localhost:5176, proxies /api/chat to LangFlow on :7860
+```
+
+Requires LangFlow running with the flow imported and ChromaDB already ingested (see above), plus
+a Langflow API key from LangFlow's Settings → **Langflow API Keys**. A `401`/`403` in the chat
+means that key is invalid or expired — regenerate it and restart `npm run dev` (env vars are only
+read at server boot). Full env var table, file layout, and error-handling reference in
+`chapter_07_RAG/LangFlow_RAG/rag-explorer/README.md` and `chapter_07_RAG/README.md`.
+
 ---
 
 ## Project - Job Tracker AI
@@ -627,6 +674,7 @@ You can read it linearly (chapter 01 → 04) or jump straight to a project:
 - **"I want to catch API contract drift without writing assertions."** → `chapter_05_AI_Agents_LangFlow/Project/003_Bug_Triage_AI_Agent.json` / `004_API_Contract_Validator.json`.
 - **"I want to turn one idea into a week of social content."** → `chapter_06_AI_Social_Media_Content_Creation/00_Hook_Story_Offer_Planning.md`.
 - **"I want to see a RAG pipeline work end-to-end, not just call an API."** → `chapter_07_RAG/`.
+- **"I want a chat UI over a LangFlow flow instead of calling curl."** → `chapter_07_RAG/LangFlow_RAG/rag-explorer/`.
 - **"I want to track job applications locally."** → `Project_Job_TRACKERAI/`.
 
 ## Requirements
@@ -637,7 +685,8 @@ You can read it linearly (chapter 01 → 04) or jump straight to a project:
 - For Chapter 4 n8n workflows: n8n Cloud or self-hosted n8n, plus credentials for whichever workflow nodes you enable.
 - For Chapter 4 ContentForge: **Node.js 20+**, npm, `GROQ_API_KEY`, and `GEMINI_API_KEY`.
 - For Chapter 5: a running **LangFlow** instance (Cloud or self-hosted) with the chapter's flows imported, plus **Node.js 18+** for the Flaky Test Analyzer UI.
-- For Chapter 7: **Node.js 20+**, local **Ollama** with `nomic-embed-text` pulled, Python `chromadb` package (`pip install chromadb`), and a `GROQ_API_KEY`.
+- For Chapter 7 Basic RAG: **Node.js 20+**, local **Ollama** with `nomic-embed-text` pulled, Python `chromadb` package (`pip install chromadb`), and a `GROQ_API_KEY`.
+- For Chapter 7 LangFlow RAG Explorer: **Node.js 20+** and a running **LangFlow** instance (`:7860`) with a `LangFlow_RAG/*.json` flow imported, ingested, and a valid Langflow API key.
 - For Job Tracker AI: **Node.js 20.19+ or 22.12+** and npm for Vite 8.
 
 ## Chapter History
