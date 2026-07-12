@@ -5,3 +5,8 @@ Here are some of the questions which will share results for Langflow Task:
 
 Here is the link for claude help
 https://claude.ai/share/9528334e-4222-4956-bd1e-614fc546a78f
+
+Image generation using chatgpt
+https://chatgpt.com/c/6a532021-e618-83e8-b68b-e5dba8a4e796
+Image generation using gemini
+https://gemini.google.com/app/2cdee6f6129262df?hl=en-IN

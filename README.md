@@ -66,6 +66,11 @@ mindmap
       n8n no-code variant (Pinecone)
       LangFlow no-code variant (Ollama/OpenAI/Mistral + Groq)
       LangFlow RAG Explorer chat UI (thin React client over LangFlow REST API)
+      Advanced RAG Explorer
+        Hybrid dense+sparse bge-m3 retrieval
+        RRF fusion + bge-reranker-v2-m3
+        Query rewriting + Qdrant embedded
+        5,000-row VWO test-case corpus
     Project - Job Tracker AI
       Local-first React Kanban board
       IndexedDB persistence
@@ -149,6 +154,18 @@ mindmap
 │   ├── Langflow-Task-Testcases-Mistral-Groq.png  LangFlow canvas — final Mistral+Groq flow
 │   ├── Langflow-Task-Testcases-Mistral-Groq-Results.png     LangFlow Playground — 3 demo Q&As
 │   ├── Langflow-Task-Testcases-Mistral-Groq-UI-Results.png  rag-explorer chat UI — same Q&As
+│   ├── Advanced-RAG-Pipeline.png                 Advanced RAG — hybrid ingest/chat pipeline diagram
+│   ├── Advanced-RAG-Explained.png                Advanced RAG — technique-by-technique explainer
+│   ├── Advance_RAG/                       Hybrid dense+sparse RAG over 5,000 VWO test cases
+│   │   ├── README.md
+│   │   ├── app.py                         Flask app — Upload / Ingest / Chunks / Chat tabs
+│   │   ├── ingest.py                      CLI ingestion (CSV/XLSX → Qdrant)
+│   │   ├── rag_core.py                    Store, chunking, hybrid search, RRF, rerank, LLM call
+│   │   ├── qdrant_data/                   Embedded Qdrant vector store (local file, no Docker)
+│   │   ├── testcase/vwo_5000_test_cases.csv   Bundled 5,000-row corpus
+│   │   ├── Advanced_RAG_Explained.html    Standalone animated pipeline explainer
+│   │   ├── static/ · templates/           Two-pane teaching UI (vanilla JS + SSE ingest progress)
+│   │   └── src/                           Supporting build notes
 │   ├── n8n_Basic_RAG/
 │   │   └── AI3X_Basic_RAG.json    n8n workflow — Pinecone-backed RAG, no-code
 │   ├── LangFlow_RAG/
@@ -634,6 +651,58 @@ means that key is invalid or expired — regenerate it and restart `npm run dev`
 read at server boot). Full env var table, file layout, and error-handling reference in
 `chapter_07_RAG/LangFlow_RAG/rag-explorer/README.md` and `chapter_07_RAG/README.md`.
 
+### Advanced RAG Explorer — hybrid retrieval, RRF fusion, reranking
+
+`chapter_07_RAG/Advance_RAG/` upgrades the Basic RAG shape with the four techniques that actually
+move the needle at scale, over a real corpus (5,000 seeded VWO test cases) instead of a couple of
+sample PDFs:
+
+```
+Ingest:  CSV/XLSX -> chunk -> bge-m3 (dense + sparse) -> Qdrant
+Chat:    query -> rewrite -> dense + sparse search -> RRF fuse -> bge-reranker -> LLM
+```
+
+![Advanced RAG pipeline](chapter_07_RAG/Advanced-RAG-Pipeline.png)
+
+| Technique | What / why |
+|-----------|------------|
+| **Hybrid retrieval** | `BAAI/bge-m3` emits **dense + sparse** vectors from one model — semantic recall *and* exact keyword/ID match (e.g. `VWO-1234`, module names). |
+| **RRF fusion** | Reciprocal Rank Fusion merges the dense and sparse rankings without tuning score scales. |
+| **Cross-encoder rerank** | `BAAI/bge-reranker-v2-m3` re-scores fused candidates by reading query+chunk together — sharper than vector similarity alone. |
+| **Query rewriting** | The LLM expands the question into alternate phrasings before retrieval, widening recall. |
+
+Vector DB is **Qdrant embedded** (local file store, no Docker). Generation uses **Groq**
+`openai/gpt-oss-120b` by default, switchable to OpenRouter via `.env`. The UI has four tabs —
+**Upload** (CSV/XLSX, choose text vs. metadata columns), **Ingest** (live SSE progress through
+Read → Build → Chunk → Embed → Index), **Chunks** (paginated viewer with substring search +
+`priority`/`module`/`jira_id` filters), and **Chat** (dense vs. sparse vs. RRF-fused rankings,
+rerank before/after, grounded answer with `[Chunk N]` citations).
+
+![Advanced RAG explained](chapter_07_RAG/Advanced-RAG-Explained.png)
+
+**Why a QA engineer should care:** exact-ID lookups (`VWO-1234`) are exactly where pure dense
+embedding search falls over — sparse retrieval catches the literal token match that semantic
+similarity alone misses. Watching RRF fuse the two ranked lists, then watching rerank reorder them
+again before the LLM ever sees the context, is the clearest way to see why "just embed and
+cosine-search" stops being good enough once a corpus gets specific and large.
+
+**Run it:**
+```bash
+cd chapter_07_RAG/Advance_RAG
+python3 -m venv .venv
+source .venv/bin/activate      # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env           # paste your GROQ_API_KEY
+python app.py
+# open http://127.0.0.1:5050
+```
+
+Qdrant runs embedded at `./qdrant_data/` — nothing to start. First ingest/chat downloads the
+models once (`bge-m3` ~2.3 GB, `bge-reranker-v2-m3` ~570 MB from the HF cache); after that it is
+fast. Qdrant local mode is single-writer, so don't run `app.py` and `ingest.py` at the same time
+against the same `qdrant_data/`. Full tunables table (`CHUNK_SIZE`, `TOP_N_HYBRID`, `TOP_K_RERANK`,
+`RRF_K`, `REWRITE_ENABLED`) and troubleshooting in `chapter_07_RAG/Advance_RAG/README.md`.
+
 ---
 
 ## Project - Job Tracker AI
@@ -675,6 +744,7 @@ You can read it linearly (chapter 01 → 04) or jump straight to a project:
 - **"I want to turn one idea into a week of social content."** → `chapter_06_AI_Social_Media_Content_Creation/00_Hook_Story_Offer_Planning.md`.
 - **"I want to see a RAG pipeline work end-to-end, not just call an API."** → `chapter_07_RAG/`.
 - **"I want a chat UI over a LangFlow flow instead of calling curl."** → `chapter_07_RAG/LangFlow_RAG/rag-explorer/`.
+- **"I want hybrid search, RRF fusion, and reranking, not just cosine similarity."** → `chapter_07_RAG/Advance_RAG/`.
 - **"I want to track job applications locally."** → `Project_Job_TRACKERAI/`.
 
 ## Requirements
@@ -687,6 +757,7 @@ You can read it linearly (chapter 01 → 04) or jump straight to a project:
 - For Chapter 5: a running **LangFlow** instance (Cloud or self-hosted) with the chapter's flows imported, plus **Node.js 18+** for the Flaky Test Analyzer UI.
 - For Chapter 7 Basic RAG: **Node.js 20+**, local **Ollama** with `nomic-embed-text` pulled, Python `chromadb` package (`pip install chromadb`), and a `GROQ_API_KEY`.
 - For Chapter 7 LangFlow RAG Explorer: **Node.js 20+** and a running **LangFlow** instance (`:7860`) with a `LangFlow_RAG/*.json` flow imported, ingested, and a valid Langflow API key.
+- For Chapter 7 Advanced RAG Explorer: **Python 3.10+**, `pip install -r chapter_07_RAG/Advance_RAG/requirements.txt`, and a `GROQ_API_KEY` (or OpenRouter key). No Docker/Qdrant server needed — Qdrant runs embedded.
 - For Job Tracker AI: **Node.js 20.19+ or 22.12+** and npm for Vite 8.
 
 ## Chapter History
