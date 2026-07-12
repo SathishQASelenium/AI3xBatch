@@ -149,7 +149,12 @@ mindmap
 │   ├── LangFlow_RAG/
 │   │   ├── AI_3x_Naive_RAG_Ollama_Groq.json     LangFlow — Ollama embeddings + Groq LLM
 │   │   ├── AI_3X_Naive RAG Uploaded.json        LangFlow — OpenAI embeddings + OpenAI LLM
-│   │   └── AI_3X_Naive RAG_Improve_Chunk.json   LangFlow — OpenAI, split ingest/query, tuned chunking
+│   │   ├── AI_3X_Naive RAG_Improve_Chunk.json   LangFlow — OpenAI, split ingest/query, tuned chunking
+│   │   ├── AI_3X_Naive RAG_Task11July2026.json  LangFlow — Mistral embeddings + Groq LLM, QA test-case CSV as source
+│   │   ├── prompt/prompt.md                     Sample questions used against the test-case RAG
+│   │   └── data/
+│   │       ├── VWO_500_Test_Cases.csv           Source data — VWO PRD-derived test cases
+│   │       └── Ecommerce_1000_Test_Cases.csv    Source data — e-commerce test cases (scenario/priority/automation columns)
 │   └── Basic_RAG/
 │       ├── prompt/prompt.md       Original build spec
 │       ├── data/                  Source PDF/TXT files to ingest (also the UI upload target)
@@ -567,7 +572,19 @@ Chat Input (question) → Chroma DB (retrieve top-k) → Prompt Template (contex
 - **`AI_3X_Naive RAG_Improve_Chunk.json`** — same OpenAI stack, but ingest and query each get
   their own dedicated embedding + Chroma DB component instead of sharing one, plus an extra
   Parser stage after retrieval — a tuned-chunking iteration on the naive flow.
-- Import any of the three JSON files into LangFlow and wire up your own Ollama/OpenAI/Groq
+- **`AI_3X_Naive RAG_Task11July2026.json`** — swaps the source data for QA test-case CSVs
+  (`data/Ecommerce_1000_Test_Cases.csv`, `data/VWO_500_Test_Cases.csv`) instead of a PRD/API PDF,
+  using **MistralAI Embeddings** for ingest/retrieve and **Groq** as the answering LLM. Proves the
+  same RAG shape works over structured test-case rows (Scenario, Priority, Automated flag, Steps)
+  so a tester can ask natural-language questions against a test-case repository instead of
+  grepping a spreadsheet. Sample questions in `prompt/prompt.md`:
+  - "Show me critical priority checkout test cases that are automated"
+  - "Show me scenario 47 from cart"
+  - "What test cases cover refunds via UPI?"
+
+  ![LangFlow Mistral + Groq test-case RAG flow](chapter_07_RAG/Langflow-Task-Testcases-Mistral-Groq.png)
+  ![LangFlow Mistral + Groq test-case RAG results](chapter_07_RAG/Langflow-Task-Testcases-Mistral-Groq-Results.png)
+- Import any of the four JSON files into LangFlow and wire up your own Ollama/OpenAI/Mistral/Groq
   credentials (exports carry component IDs, not live keys).
 
 ---
