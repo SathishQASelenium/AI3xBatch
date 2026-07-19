@@ -1,0 +1,297 @@
+<title>Building QABuddy.ai — Backend Notes</title>
+<style>
+  :root{
+    --bg: #EEF0EC; --surface: #FBFBF8; --surface-2: #E4E7E1; --ink: #1B1F1D;
+    --muted: #565D57; --line: #D6DACF; --accent: #2F5D9E; --accent-soft: #E4ECF7;
+    --accent-2: #A66423; --accent-2-soft: #F3E6D6; --good: #3C7A4E; --bad:#A23B32;
+    --radius: 3px;
+    --mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg: #14181A; --surface: #1B211E; --surface-2: #232A26; --ink: #E8EBE6;
+      --muted: #9AA39B; --line: #2C332D; --accent: #7BA3E3; --accent-soft: #24344A;
+      --accent-2: #D69A55; --accent-2-soft: #3A2E1C; --good: #6FBC85; --bad:#E28479;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #14181A; --surface: #1B211E; --surface-2: #232A26; --ink: #E8EBE6;
+    --muted: #9AA39B; --line: #2C332D; --accent: #7BA3E3; --accent-soft: #24344A;
+    --accent-2: #D69A55; --accent-2-soft: #3A2E1C; --good: #6FBC85; --bad:#E28479;
+  }
+  :root[data-theme="light"]{
+    --bg: #EEF0EC; --surface: #FBFBF8; --surface-2: #E4E7E1; --ink: #1B1F1D;
+    --muted: #565D57; --line: #D6DACF; --accent: #2F5D9E; --accent-soft: #E4ECF7;
+    --accent-2: #A66423; --accent-2-soft: #F3E6D6; --good: #3C7A4E; --bad:#A23B32;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans);
+    -webkit-font-smoothing:antialiased; line-height:1.55;
+  }
+  .page{
+    max-width:1180px; margin:0 auto; padding:0 28px 100px; display:grid;
+    grid-template-columns:1fr 200px; grid-template-areas:"head head" "main toc";
+    gap:0 56px; align-items:start;
+  }
+  @media (max-width:920px){
+    .page{grid-template-columns:1fr; grid-template-areas:"head" "main" "toc";}
+  }
+
+  main{min-width:0; grid-area:main;}
+  a{color:var(--accent);}
+  code, .mono{font-family:var(--mono);}
+
+  header.masthead{padding:64px 0 40px; border-bottom:1px solid var(--line); grid-area:head; display:flex; flex-direction:column; gap:16px;}
+  .eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:10px;}
+  .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--good);display:inline-block;}
+  h1{font-family:var(--serif); font-weight:400; font-size:clamp(32px,4.6vw,50px); margin:0; letter-spacing:-0.01em; text-wrap:balance;}
+  h1 em{font-style:italic; color:var(--accent);}
+  .tagline{font-size:16.5px; color:var(--muted); max-width:66ch; margin:0; text-wrap:pretty;}
+  .stackrow{display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;}
+  .chip{font-family:var(--mono); font-size:12px; padding:5px 10px; border:1px solid var(--line); border-radius:var(--radius); color:var(--muted); background:var(--surface); white-space:nowrap;}
+  .chip b{color:var(--ink); font-weight:600;}
+
+  /* TOC */
+  nav.toc{grid-area:toc; position:sticky; top:32px; padding-top:64px; display:flex; flex-direction:column; gap:2px;}
+  nav.toc .label{font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;}
+  nav.toc a{display:block; font-size:13px; color:var(--muted); text-decoration:none; padding:6px 0 6px 12px; border-left:2px solid transparent;}
+  nav.toc a:hover{color:var(--ink); border-left-color:var(--line);}
+  @media (max-width:920px){nav.toc{display:none;}}
+
+  section{padding:44px 0; border-bottom:1px solid var(--line); scroll-margin-top:24px;}
+  section:last-of-type{border-bottom:none;}
+  h2{font-family:var(--serif); font-weight:400; font-size:23px; margin:0 0 8px; text-wrap:balance;}
+  .lede{color:var(--muted); font-size:14.5px; margin:0 0 24px; max-width:70ch;}
+  p.body{font-size:14.5px; max-width:70ch; margin:0 0 14px;}
+  p.body code{font-size:12.5px; background:var(--surface-2); padding:1px 5px; border-radius:2px;}
+
+  /* stack table */
+  .tablewrap{overflow-x:auto; border:1px solid var(--line); border-radius:var(--radius); margin-bottom:8px;}
+  table{border-collapse:collapse; width:100%; font-size:13.5px; min-width:640px;}
+  thead th{text-align:left; font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); background:var(--surface-2); padding:10px 16px; border-bottom:1px solid var(--line);}
+  tbody td{padding:11px 16px; border-bottom:1px solid var(--line); background:var(--surface); color:var(--ink); vertical-align:top;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody td.mono{color:var(--muted); font-size:12.5px;}
+
+  /* code blocks */
+  .snippet{margin:16px 0 20px;}
+  .snippet .cap{font-family:var(--mono); font-size:11.5px; color:var(--muted); margin-bottom:6px; display:flex; justify-content:space-between; gap:8px;}
+  .snippet .cap .file{color:var(--accent);}
+  pre{margin:0; padding:16px 18px; background:var(--surface-2); border:1px solid var(--line); border-radius:var(--radius); overflow-x:auto; font-size:12.5px; line-height:1.6;}
+  pre code{font-family:var(--mono); color:var(--ink); white-space:pre;}
+  .c-str{color:var(--good);}
+  .c-com{color:var(--muted); font-style:italic;}
+  .c-kw{color:var(--accent);}
+  .c-num{color:var(--accent-2);}
+
+  /* flow steps */
+  .steps{display:flex; flex-direction:column; gap:0;}
+  .step{display:grid; grid-template-columns:28px 1fr; gap:16px; padding:14px 0; border-top:1px solid var(--line);}
+  .step:first-child{border-top:none;}
+  .step .n{font-family:var(--mono); font-size:12px; color:var(--accent); padding-top:2px;}
+  .step h4{margin:0 0 4px; font-size:14px; font-weight:600;}
+  .step p{margin:0; font-size:13.5px; color:var(--muted); max-width:64ch;}
+  .step code{font-size:12px; background:var(--surface-2); padding:1px 5px; border-radius:2px; color:var(--ink);}
+
+  /* file map */
+  .filemap{display:grid; grid-template-columns:280px 1fr; gap:1px; background:var(--line); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;}
+  @media (max-width:640px){.filemap{grid-template-columns:1fr;}}
+  .filemap .path{background:var(--surface); padding:10px 14px; font-family:var(--mono); font-size:12.5px; color:var(--ink);}
+  .filemap .desc{background:var(--surface); padding:10px 14px; font-size:13px; color:var(--muted);}
+
+  /* bug cards */
+  .bug{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--bad); border-radius:var(--radius); padding:20px 22px; margin-bottom:18px;}
+  .bug h4{margin:0 0 6px; font-size:14.5px; font-weight:600; display:flex; align-items:center; gap:8px;}
+  .bug .tag{font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--bad); border:1px solid var(--bad); border-radius:2px; padding:1px 6px;}
+  .bug p{margin:0 0 10px; font-size:13.5px; color:var(--muted); max-width:68ch;}
+  .bug .fix{font-size:13px; color:var(--ink);}
+  .bug .fix b{color:var(--good);}
+
+  /* mode table pills */
+  .pill{font-family:var(--mono); font-size:11.5px; padding:2px 8px; border-radius:10px; background:var(--accent-soft); color:var(--accent);}
+
+  footer{padding:40px 0 0; font-size:12px; color:var(--muted); font-family:var(--mono); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; grid-column:1/-1; border-top:1px solid var(--line); margin-top:8px;}
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <div class="eyebrow"><span class="dot"></span> chapter_08_QABuddyAI — backend build notes</div>
+    <h1>Building QABuddy<em>.ai</em></h1>
+    <p class="tagline">How the backend actually works: the ingestion pipeline, the hybrid retrieval stack, the prompting rules that keep it from making things up — and the real bugs that came out of building it.</p>
+    <div class="stackrow">
+      <span class="chip"><b>Python</b> / Flask</span>
+      <span class="chip"><b>FlagEmbedding</b> BGE-M3</span>
+      <span class="chip"><b>Qdrant</b></span>
+      <span class="chip"><b>transformers</b> cross-encoder</span>
+      <span class="chip">Groq · gpt-oss-120b</span>
+      <span class="chip">SSE streaming</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <div class="label">Contents</div>
+    <a href="#stack">Stack &amp; why</a>
+    <a href="#flow">Request lifecycle</a>
+    <a href="#ingestion">Ingestion internals</a>
+    <a href="#retrieval">Retrieval internals</a>
+    <a href="#prompts">Prompting rules</a>
+    <a href="#bugs">Bugs hit &amp; fixed</a>
+    <a href="#files">Code map</a>
+  </nav>
+
+  <main>
+
+    <section id="stack">
+      <h2>Stack &amp; why</h2>
+      <p class="lede">Every layer is open-weight and swappable by environment variable — no code change to move from a laptop to the droplet.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Layer</th><th>Choice</th><th>Role</th><th>Swap point</th></tr></thead>
+          <tbody>
+            <tr><td>Embedding</td><td>BGE-M3 <span class="mono">(FlagEmbedding)</span></td><td>One <code>encode()</code> call returns dense 1024d + lexical sparse weights — no second model for keyword search.</td><td class="mono">EMBED_MODEL</td></tr>
+            <tr><td>Vector store</td><td>Qdrant <span class="mono">(qdrant-client)</span></td><td>Named <code>dense</code> + <code>sparse</code> vectors on one point; keyword payload indexes for filtering.</td><td class="mono">QDRANT_URL / QDRANT_PATH</td></tr>
+            <tr><td>Reranker</td><td>bge-reranker-v2-m3 <span class="mono">(raw transformers)</span></td><td>Cross-encoder scores the fused candidates; only the top-6 survive to the LLM.</td><td class="mono">RERANK_MODEL</td></tr>
+            <tr><td>LLM</td><td>Groq — <span class="mono">openai/gpt-oss-120b</span></td><td>OpenAI-compatible <code>/chat/completions</code>, called streaming and non-streaming.</td><td class="mono">LLM_BASE_URL / LLM_MODEL</td></tr>
+            <tr><td>Web layer</td><td>Flask + SSE</td><td>Two long-lived streams: chat tokens and ingest progress, both server-sent events.</td><td class="mono">—</td></tr>
+            <tr><td>Parsing</td><td>pandas, PyMuPDF, hand-rolled regex</td><td>CSV/XLSX rows, PDF pages, brace-aware code units, JUnit XML, Jenkins console logs.</td><td class="mono">—</td></tr>
+            <tr><td>Config</td><td>python-dotenv + PyYAML</td><td>Secrets in <code>.env</code>, tunables in <code>config.yaml</code>, merged in <code>app/config.py</code>.</td><td class="mono">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="flow">
+      <h2>Request lifecycle</h2>
+      <p class="lede">Flask holds one process-wide <code>Store</code> — the embedded Qdrant client only allows one owner of <code>qdrant_data/</code>, so chat and ingest share it rather than opening their own.</p>
+      <div class="steps">
+        <div class="step"><div class="n">01</div><div><h4>POST /api/chat opens an SSE stream</h4><p>Flask wraps the generator in <code>stream_with_context</code>; every yielded dict is serialized as one <code>data: {...}\n\n</code> event.</p></div></div>
+        <div class="step"><div class="n">02</div><div><h4><code>ask_events()</code> drives the pipeline</h4><p>condense → mode detect → retrieve → citations → relevance gate → prompt build → LLM stream. Each stage yields its own event type: <code>meta</code>, <code>citations</code>, <code>token</code>, <code>done</code>.</p></div></div>
+        <div class="step"><div class="n">03</div><div><h4>GET /api/ingest runs on a background thread</h4><p>A <code>queue.Queue</code> bridges a daemon thread doing the actual embedding to a generator that drains the queue and re-emits each item as SSE, so the UI's progress bar updates live without blocking the request.</p></div></div>
+        <div class="step"><div class="n">04</div><div><h4>GET /api/search is the debug escape hatch</h4><p>Runs retrieval only — hybrid search, RRF, rerank — with no LLM call, so retrieval quality can be checked independent of the model.</p></div></div>
+      </div>
+    </section>
+
+    <section id="ingestion">
+      <h2>Ingestion internals</h2>
+      <p class="lede">10 source folders, one shared contract: every loader returns a list of <code>Doc(uid, text, payload)</code>.</p>
+
+      <p class="body">The <code>uid</code> is a truncated SHA-256 of <code>source_type|path|text</code> — deterministic, so re-ingesting the same content always produces the same Qdrant point id (a <code>uuid5</code> of that hash) and upserts overwrite in place instead of duplicating.</p>
+      <div class="snippet">
+        <div class="cap"><span class="file">app/ingestion/base.py</span><span>stable id</span></div>
+        <pre><code>h = hashlib.sha256(f"{source_type}|{path}|{text}".encode())
+uid = h.hexdigest()[:40]
+point_id = uuid.uuid5(uuid.NAMESPACE_URL, uid)   <span class="c-com"># idempotent upsert</span></code></pre>
+      </div>
+
+      <p class="body">Re-ingesting is a diff, not a rebuild. Each source keeps a per-file signature in <code>data/.ingest_manifest.json</code> — a hash of that file's chunk uids. Unchanged files are skipped entirely; changed files are deleted and re-embedded; files removed from disk are deleted from Qdrant. The manifest only commits after a source's full loop finishes, so an interrupted run re-does that source's changed files rather than resuming mid-file.</p>
+
+      <p class="body">The code loader (sources 01/02) is the most involved: it walks Java/TypeScript files line by line, tracks brace depth, and matches method/class signatures with regex (a Java-specific pattern, five TypeScript patterns for class/function/arrow/test-block/method). A unit closes when depth returns to its opening level. Oversized classes decompose into their own methods; leftover lines — imports, fields — become windowed fallback chunks; anything under 250 characters merges into its neighbor. Every chunk keeps 1-indexed <code>line_start</code>/<code>line_end</code>, which is what turns into a clickable <code>path:49-70</code> citation later.</p>
+
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Source</th><th>Loader</th><th>Notable handling</th></tr></thead>
+          <tbody>
+            <tr><td>01 / 02 — repos</td><td><code>load_code</code></td><td>Brace-aware method/class extraction; skips generated HTML reports, vendored dirs, lockfiles.</td></tr>
+            <tr><td>03 — test cases</td><td><code>load_testcases</code></td><td>pandas reads CSV/XLSX; one row = one chunk; id column auto-detected by regex over header names.</td></tr>
+            <tr><td>04 — JIRA</td><td><code>load_jira</code></td><td>One ticket = one chunk; long comment threads spill into a second, clearly-labeled chunk.</td></tr>
+            <tr><td>05 / 08 / 09 — docs</td><td><code>load_docs</code></td><td>PyMuPDF per PDF page; Markdown split heading-aware so each chunk carries its section trail.</td></tr>
+            <tr><td>07 — meeting notes</td><td><code>load_transcripts</code></td><td>Speaker-turn detection (timestamp + name regex) packs turns into windows without cutting mid-turn.</td></tr>
+            <tr><td>10 — Jenkins</td><td><code>load_jenkins</code></td><td>Regex-triggered failure-block extraction (stack traces, exceptions) plus JUnit XML failure/error parsing.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="retrieval">
+      <h2>Retrieval internals</h2>
+      <p class="lede"><code>app/retrieval.py</code> — condense, rewrite, search twice, fuse, rerank, gate.</p>
+
+      <div class="steps">
+        <div class="step"><div class="n">01</div><div><h4>Mode detection</h4><p>A follow-up question is condensed against the last 3 turns via one small LLM call, then matched against three regexes before falling back to plain <code>answer</code> mode:</p>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+            <span class="pill">generate → create/write/draft test cases</span>
+            <span class="pill">rca → root cause / why did it fail</span>
+            <span class="pill">review → coverage gaps / missing</span>
+          </div>
+        </div></div>
+        <div class="step"><div class="n">02</div><div><h4>Query rewrite</h4><p>The LLM produces 3 alternate phrasings of the question (temperature 0.4). Original + rewrites all get embedded and searched — cheap recall insurance against a single bad phrasing.</p></div></div>
+        <div class="step"><div class="n">03</div><div><h4>Hybrid search, per variant</h4><p>Each query variant runs a <code>dense_search</code> and a <code>sparse_search</code> against Qdrant (top 20 each, optionally filtered by selected source types), deduped into two result maps keyed by point id.</p></div></div>
+        <div class="step"><div class="n">04</div><div><h4>Reciprocal Rank Fusion</h4><p>Dense and sparse rankings merge without needing comparable score scales:</p>
+          <pre style="margin-top:8px;"><code>score[id] += 1 / (k + rank + 1)   <span class="c-com"># k = 60, once per list</span></code></pre>
+        </div></div>
+        <div class="step"><div class="n">05</div><div><h4>Cross-encoder rerank</h4><p>The fused top-12 go through <code>bge-reranker-v2-m3</code> as <code>(question, chunk_text)</code> pairs; logits pass through <code>sigmoid</code> for a 0–1 score, top-6 survive.</p></div></div>
+        <div class="step"><div class="n">06</div><div><h4>Relevance gate</h4><p>If the best rerank score is below <code>0.22</code>, QABuddy returns a fixed "not in the knowledge base" message instead of calling the LLM at all — the anti-hallucination floor lives in retrieval, not just in the prompt.</p></div></div>
+      </div>
+    </section>
+
+    <section id="prompts">
+      <h2>Prompting rules</h2>
+      <p class="lede"><code>app/prompts.py</code> — one base rule set, four mode overlays, a glossary injection.</p>
+      <p class="body">Every mode shares the same non-negotiable base: answer <em>only</em> from the retrieved chunks, cite every claim as <code>[n]</code>, use exact identifiers (file paths, line numbers, ticket keys, test-case ids) rather than paraphrasing them, and say what's missing instead of guessing. On top of that, each mode gets its own system-prompt overlay — <code>generate</code> asks for Title/Preconditions/Steps/Expected Result/Priority/Tags; <code>review</code> asks for covered areas, gaps, and risky assumptions; <code>rca</code> asks for root cause, evidence chain, and bug classification.</p>
+      <p class="body">Citations are built per source type so they read naturally inside the answer — <code>chunk_label()</code> turns a payload into <code>repo/path:line_start-line_end</code> for code, <code>test case TC-014</code> for a row, <code>JIRA VWO-123</code> for a ticket, <code>Jenkins build #128</code> for a log — the same labels the LLM sees in its context and the UI shows in the citation cards.</p>
+    </section>
+
+    <section id="bugs">
+      <h2>Bugs hit &amp; fixed</h2>
+      <p class="lede">Four real problems, in the order they surfaced.</p>
+
+      <div class="bug">
+        <h4>FlagEmbedding's reranker crashed on load <span class="tag">library</span></h4>
+        <p>FlagEmbedding 1.4.0's <code>FlagReranker.compute_score</code> calls <code>tokenizer.prepare_for_model</code>, which the loaded XLM-R tokenizer for bge-reranker-v2-m3 doesn't expose in that version.</p>
+        <p class="fix"><b>Fix —</b> bypassed the wrapper entirely: load the model as a plain <code>AutoModelForSequenceClassification</code> via <code>transformers</code>, tokenize the (query, chunk) pairs directly, and sigmoid the logits ourselves. Version-robust, one dependency fewer in the hot path.</p>
+      </div>
+
+      <div class="bug">
+        <h4>Streamed answers mangled quotes and dashes <span class="tag">encoding</span></h4>
+        <p>Groq's SSE response carries no explicit charset on its content-type, so <code>requests</code> silently falls back to latin-1 when iterating lines — curly quotes and em-dashes came through corrupted mid-stream.</p>
+        <p class="fix"><b>Fix —</b> decode every raw line as UTF-8 ourselves before parsing the <code>data: ...</code> payload, instead of trusting <code>requests</code>' auto-detection.</p>
+      </div>
+
+      <div class="bug">
+        <h4>Killing ingest mid-file forced a full re-embed <span class="tag">ingestion</span></h4>
+        <p>The manifest signs each source <em>per file</em>, and only writes after that source's whole loop completes. Source 03 (the 5,000-row test-case CSV) is one file — an interrupted run left no partial credit, so the next run re-embedded all 5,000 rows from row one.</p>
+        <p class="fix"><b>Fix —</b> not a code change here — trimmed the working CSV to 200 rows for a fast local demo, kept the full 5,000-row file as a backup to swap back in for a real ingest run.</p>
+      </div>
+
+      <div class="bug">
+        <h4><code>dev.sh</code> assumed a Linux venv layout <span class="tag">platform</span></h4>
+        <p>The convenience script calls <code>.venv/bin/python</code> directly. On Windows, <code>uv venv</code> creates <code>.venv/Scripts/python.exe</code> — the script fails with "No such file or directory" before Flask ever starts.</p>
+        <p class="fix"><b>Fix —</b> ran the server module directly with the Windows interpreter path (<code>.venv/Scripts/python.exe -m app.server.app</code>) instead of the shell wrapper.</p>
+      </div>
+    </section>
+
+    <section id="files">
+      <h2>Code map</h2>
+      <p class="lede">Where each responsibility actually lives.</p>
+      <div class="filemap">
+        <div class="path">app/config.py</div><div class="desc">Merges <code>.env</code> secrets + <code>config.yaml</code> tunables into one namespace; <code>cfg("retrieval.top_k", 6)</code> dotted lookup with fallback.</div>
+        <div class="path">app/core/embedder.py</div><div class="desc">Lazy-loaded BGE-M3 singleton; one <code>encode()</code> returns dense + sparse together.</div>
+        <div class="path">app/core/store.py</div><div class="desc">Qdrant wrapper — collection lifecycle, named-vector upsert, filtered dense/sparse search, stats.</div>
+        <div class="path">app/core/fusion.py</div><div class="desc">Reciprocal Rank Fusion of two hit lists.</div>
+        <div class="path">app/core/reranker.py</div><div class="desc">Cross-encoder scoring via raw <code>transformers</code>, bypassing the FlagEmbedding wrapper bug.</div>
+        <div class="path">app/core/chunking.py</div><div class="desc">Per-source-type chunkers — prose windows, heading-aware docs, transcript turn-packing, brace-aware code units, log failure-block extraction.</div>
+        <div class="path">app/ingestion/base.py</div><div class="desc"><code>Doc</code> dataclass, stable uid hashing, safe file walking (excludes vendored/build dirs, oversized files).</div>
+        <div class="path">app/ingestion/loaders.py</div><div class="desc">One loader per source type, each emitting citation-ready payloads.</div>
+        <div class="path">app/ingestion/pipeline.py</div><div class="desc">Manifest diff, batch embed, idempotent upsert; <code>ingest_source()</code> / <code>ingest_all()</code>.</div>
+        <div class="path">app/ingestion/cli.py</div><div class="desc">Command-line entry point — <code>ingest --all</code>, <code>ingest --source NN</code>, <code>stats</code>.</div>
+        <div class="path">app/retrieval.py</div><div class="desc">The ask pipeline — condense, rewrite, hybrid search, fuse, rerank, relevance gate, streamed events.</div>
+        <div class="path">app/prompts.py</div><div class="desc">Base rules, per-mode system prompts, glossary injection, citation labeling.</div>
+        <div class="path">app/llm.py</div><div class="desc">OpenAI-compatible chat client — streaming and non-streaming, provider-agnostic.</div>
+        <div class="path">app/server/app.py</div><div class="desc">Flask routes — chat (SSE), ingest (SSE via background thread + queue), search, stats, health.</div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <span>chapter_08_QABuddyAI</span>
+    <span>AI3x Batch</span>
+  </footer>
+
+</div>

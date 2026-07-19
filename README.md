@@ -71,6 +71,13 @@ mindmap
         RRF fusion + bge-reranker-v2-m3
         Query rewriting + Qdrant embedded
         5,000-row VWO test-case corpus
+    Ch 08 - QABuddy.ai
+      Multi-source hybrid RAG for QA teams
+      10 knowledge sources - code, tests, JIRA, docs, logs
+      BGE-M3 hybrid dense+sparse embed
+      Qdrant + RRF fusion + bge-reranker-v2-m3
+      Flask SSE chat + ingest UI
+      Groq gpt-oss-120b cited answers
     Project - Job Tracker AI
       Local-first React Kanban board
       IndexedDB persistence
@@ -188,6 +195,23 @@ mindmap
 │       └── rag-explorer/          React + Express RAG pipeline app
 │           ├── server/lib/        chunk.js, embed.js, chroma.js, groq.js, pdf.js
 │           └── src/                Pipeline visualisation UI (Vite + React)
+│
+├── chapter_08_QABuddyAI/          Multi-source hybrid RAG for QA knowledge
+│   ├── README.md · Plan.md · config.yaml · glossary.yaml
+│   ├── qabuddy-home.png · qabuddy-cited-answer.png   UI screenshots
+│   ├── qabuddy-architecture.html   Standalone architecture explainer (open in a browser)
+│   ├── app/
+│   │   ├── core/                  embedder (bge-m3), store (Qdrant), fusion (RRF), reranker, chunking
+│   │   ├── ingestion/              per-source loaders, manifest-diff pipeline, CLI
+│   │   ├── server/                 Flask app — SSE chat + ingest, terminal-style chat UI
+│   │   ├── retrieval.py            ask pipeline: condense → rewrite → hybrid → rerank → cite
+│   │   ├── prompts.py              mode prompts (answer/generate/review/rca) + anti-hallucination rules
+│   │   └── llm.py                  OpenAI-compatible client (Groq openai/gpt-oss-120b)
+│   ├── data/01..10/               10 QA knowledge sources (payloads gitignored, samples committed)
+│   ├── docs/                       architecture.md/.html, build-notes.html, deploy runbook, phase 2 plan
+│   ├── scripts/                    fetch_repos, setup_fixtures, jira_fetch, eval, backup, dev
+│   ├── tests/                      pytest unit tests (chunking, loaders)
+│   └── docker-compose.yml · Caddyfile · Dockerfile   droplet deployment (Qdrant server + app + TLS)
 │
 └── Project_Job_TRACKERAI/         Local-first job application tracker
     ├── README.md
@@ -705,6 +729,93 @@ against the same `qdrant_data/`. Full tunables table (`CHUNK_SIZE`, `TOP_N_HYBRI
 
 ---
 
+## Chapter 08 — QABuddy.ai
+
+`chapter_08_QABuddyAI/` is a full multi-source **hybrid RAG** backend built for a QA team's real
+knowledge base — not a couple of sample PDFs, but ten source types at once: two test-automation
+repos (Selenium + Playwright), a 5,000-row test-case corpus, JIRA history, company docs, meeting
+notes, Lucid flow exports, PRDs, and Jenkins CI logs.
+
+```
+Ingest:  data/01..10 -> per-source loader -> chunk -> BGE-M3 (dense + sparse, one pass) -> Qdrant
+Ask:     question -> condense -> rewrite (3x) -> hybrid search -> RRF fuse -> rerank -> cited answer
+```
+
+![QA Buddy home](chapter_08_QABuddyAI/qabuddy-home.png)
+
+- **Embeddings:** `BAAI/bge-m3` — one model, one `encode()` call, returns dense (semantic) **and**
+  lexical sparse vectors, so exact identifiers (`VWO-123`, `NoSuchElementException`) retrieve
+  alongside fuzzy intent.
+- **Vector store:** **Qdrant**, embedded locally (no Docker) or as a server on the droplet —
+  switched by one env var, no code change.
+- **Fusion + rerank:** dense and sparse hit lists merge via **Reciprocal Rank Fusion**, then
+  `BAAI/bge-reranker-v2-m3` cross-encodes the fused top-12 down to the best 6 chunks.
+- **Answer LLM:** **Groq** `openai/gpt-oss-120b`, streamed token-by-token over SSE, prompted to
+  cite every claim as `[n]` and say what's missing rather than invent it.
+- **Modes:** the same ask pipeline detects intent from the question — `answer`, `generate` (new
+  test cases), `review` (coverage gaps), or `rca` (root cause analysis) — and swaps system prompts
+  accordingly.
+- **Ingestion is idempotent:** a per-file manifest hash means re-running ingest only re-embeds
+  changed files; unchanged files are skipped.
+
+**Why a QA engineer should care:** this is the RAG shape from Chapter 07's Advanced RAG Explorer,
+grown up to production concerns — nine heterogeneous real-world source types instead of one CSV,
+a relevance gate that refuses to answer below a confidence threshold instead of always generating
+something, and a droplet deployment path (Docker Compose + Caddy TLS) alongside the local one.
+
+![QA Buddy cited answer across code, JIRA, meeting notes, and Lucid flow](chapter_08_QABuddyAI/qabuddy-cited-answer.png)
+
+**Ask pipeline — from question to cited answer:**
+
+```mermaid
+flowchart LR
+    Q[Question] --> CD[Condense follow-up]
+    CD --> RW[LLM rewrite - 3 variants]
+    RW --> DS[Dense search]
+    RW --> SS[Sparse search]
+    DS --> RRF[RRF fuse, k=60]
+    SS --> RRF
+    RRF --> RR[Cross-encoder rerank]
+    RR --> GATE{best score >= 0.22?}
+    GATE -->|no| NA["'Not in KB' - no invented answer"]
+    GATE -->|yes| LLM[Groq gpt-oss-120b, streamed]
+    LLM --> A["Answer with [n] citations"]
+```
+
+**Q&A — design choices:**
+- **Q: Why dense *and* sparse from the same model instead of a separate keyword index?**
+  A: `BAAI/bge-m3` emits both in one `encode()` call — one model to load, one embedding pass per
+  chunk, and RRF fusion needs no score-scale tuning between two disjoint retrieval systems.
+- **Q: What stops it from hallucinating when the knowledge base doesn't have the answer?**
+  A: A hard relevance gate in `app/retrieval.py` — if the best reranked score is below `0.22`, the
+  pipeline returns a fixed "not in the KB" message and never calls the LLM at all.
+- **Q: Why rebuild the reranker on raw `transformers` instead of using FlagEmbedding's built-in one?**
+  A: FlagEmbedding 1.4.0's `FlagReranker.compute_score` calls a tokenizer method
+  `bge-reranker-v2-m3`'s XLM-R tokenizer doesn't expose. Loading it as a plain
+  `AutoModelForSequenceClassification` and sigmoid-ing the logits ourselves is version-robust.
+
+**Run it:**
+```bash
+cd chapter_08_QABuddyAI
+uv venv .venv --python 3.13 && uv pip install -p .venv/bin/python -r requirements.txt
+cp .env.example .env                 # put your GROQ_API_KEY in it
+./scripts/fetch_repos.sh             # clone the two framework repos
+./scripts/setup_fixtures.sh          # demo CSV + PRD from chapter 07
+.venv/bin/python -m app.ingestion.cli ingest --all
+.venv/bin/python -m pytest tests -q  # unit tests
+./scripts/dev.sh                     # UI on http://127.0.0.1:5080
+```
+
+On Windows, `uv venv` creates `.venv\Scripts\python.exe` rather than `.venv/bin/python` —
+`scripts/dev.sh` assumes the Linux layout, so run the server module directly instead:
+`.venv\Scripts\python.exe -m app.server.app`.
+
+Full pipeline design in `chapter_08_QABuddyAI/docs/architecture.md`, a standalone visual walkthrough
+in `qabuddy-architecture.html`, and backend implementation notes (stack choices, ingestion/retrieval
+internals, real bugs hit and fixed) in `docs/build-notes.html` — open either directly in a browser.
+
+---
+
 ## Project - Job Tracker AI
 
 `Project_Job_TRACKERAI/` is a local-first job application tracker built as a Vite + React single-page app. It stores every job card in the browser with IndexedDB through the `idb` library, so there is no backend, authentication, or external database.
@@ -745,6 +856,8 @@ You can read it linearly (chapter 01 → 04) or jump straight to a project:
 - **"I want to see a RAG pipeline work end-to-end, not just call an API."** → `chapter_07_RAG/`.
 - **"I want a chat UI over a LangFlow flow instead of calling curl."** → `chapter_07_RAG/LangFlow_RAG/rag-explorer/`.
 - **"I want hybrid search, RRF fusion, and reranking, not just cosine similarity."** → `chapter_07_RAG/Advance_RAG/`.
+- **"I want one chat that answers from code, tests, JIRA, docs, and logs at once."** → `chapter_08_QABuddyAI/`.
+- **"I want to generate new test cases or find coverage gaps from a knowledge base."** → `chapter_08_QABuddyAI/` (`generate` / `review` modes).
 - **"I want to track job applications locally."** → `Project_Job_TRACKERAI/`.
 
 ## Requirements
@@ -758,6 +871,7 @@ You can read it linearly (chapter 01 → 04) or jump straight to a project:
 - For Chapter 7 Basic RAG: **Node.js 20+**, local **Ollama** with `nomic-embed-text` pulled, Python `chromadb` package (`pip install chromadb`), and a `GROQ_API_KEY`.
 - For Chapter 7 LangFlow RAG Explorer: **Node.js 20+** and a running **LangFlow** instance (`:7860`) with a `LangFlow_RAG/*.json` flow imported, ingested, and a valid Langflow API key.
 - For Chapter 7 Advanced RAG Explorer: **Python 3.10+**, `pip install -r chapter_07_RAG/Advance_RAG/requirements.txt`, and a `GROQ_API_KEY` (or OpenRouter key). No Docker/Qdrant server needed — Qdrant runs embedded.
+- For Chapter 8 QABuddy.ai: **Python 3.13** (`uv venv` recommended), `pip install -r chapter_08_QABuddyAI/requirements.txt`, a `GROQ_API_KEY`, and `git` to clone the two framework repos via `scripts/fetch_repos.sh`. No Docker/Qdrant server needed locally — Docker Compose is only for the droplet deploy path.
 - For Job Tracker AI: **Node.js 20.19+ or 22.12+** and npm for Vite 8.
 
 ## Chapter History
