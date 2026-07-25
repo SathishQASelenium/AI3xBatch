@@ -28,3 +28,4 @@ env
 
 # Local browser verification artifacts
 .playwright-mcp/
+.playwright-cli/
