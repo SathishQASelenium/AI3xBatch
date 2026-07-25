@@ -1,0 +1,8 @@
+[project]
+name = "testcase-creator-mcp1"
+version = "0.1.0"
+description = "MCP server exposing VWO test cases as tools, resources, and prompts (FastMCP)"
+requires-python = ">=3.11"
+dependencies = [
+    "fastmcp==2.14.7",
+]

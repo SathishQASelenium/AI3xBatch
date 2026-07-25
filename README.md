@@ -83,6 +83,12 @@ mindmap
       IndexedDB persistence
       Drag-and-drop job cards
       JSON backup and restore
+    Ch 10 - MCP Creation (VIBE)
+      FastMCP server over VWO test-case CSV
+      Tools - search, get, stats
+      Resources - schema, all, templated module URI
+      Prompts - review, regression suite
+      MCP Inspector verification walkthrough
 ```
 
 ---
@@ -213,15 +219,27 @@ mindmap
 │   ├── tests/                      pytest unit tests (chunking, loaders)
 │   └── docker-compose.yml · Caddyfile · Dockerfile   droplet deployment (Qdrant server + app + TLS)
 │
-└── Project_Job_TRACKERAI/         Local-first job application tracker
-    ├── README.md
-    ├── package.json
-    ├── src/
-    │   ├── App.jsx
-    │   ├── constants.js
-    │   └── db.js
-    └── public/
-        └── favicon.svg
+├── Project_Job_TRACKERAI/         Local-first job application tracker
+│   ├── README.md
+│   ├── package.json
+│   ├── src/
+│   │   ├── App.jsx
+│   │   ├── constants.js
+│   │   └── db.js
+│   └── public/
+│       └── favicon.svg
+│
+└── chapter_10_MCP_Creation_VIBE/  FastMCP server: Tools/Resources/Prompts over a VWO test-case CSV
+    ├── README.md                  Inspector walkthrough, screenshots 01-09 explained
+    ├── Prompt.md                  RICE-POT-style build spec used to generate the server
+    ├── resource/
+    │   └── vwo_5000_test_cases.csv    Source dataset (200 rows: Issue Key, Component, Priority, Steps...)
+    ├── 01..09_MCP-Inspector_*.png  Inspector screenshots: connect -> resources -> prompts -> tools -> disconnect
+    └── testcase-creator-mcp/      uv-managed FastMCP project
+        ├── README.md              Install/run/inspect commands + claude_desktop_config.json snippet
+        ├── server.py              Tools + Resources + Prompts, stdio transport, ~205 lines
+        ├── pyproject.toml         fastmcp==2.14.7 pinned
+        └── uv.lock
 ```
 
 ---
@@ -838,6 +856,81 @@ Open the local Vite URL and use the app directly in the browser. Data persists i
 
 ---
 
+## Chapter 10 — MCP Creation (VIBE)
+
+`chapter_10_MCP_Creation_VIBE/` builds **one runnable MCP server** with **FastMCP** that makes the
+distinction between the three MCP primitives concrete instead of abstract:
+
+- **Tools** — model-invoked actions that return data.
+- **Resources** — application-controlled context, addressed by URI (including a templated one).
+- **Prompts** — user-invoked message templates for an LLM client, not data lookups.
+
+All three sit over one in-memory dataset — a 200-row VWO manual-test-case CSV export
+(`resource/vwo_5000_test_cases.csv`) loaded once at server startup, never re-read per request.
+
+```
+CSV (loaded once at startup) -> in-memory list[dict] + issue_key index
+        |-- Tools:     search_test_cases / get_test_case / test_case_stats
+        |-- Resources: testcases://schema / testcases://all / testcases://module/{name}
+        `-- Prompts:   review_test_case / generate_regression_suite
+```
+
+**What's here:**
+- `Prompt.md` — the RICE-POT-style build spec: role, instructions, context, a worked example, and
+  a 3-phase process (confirm schema → generate code → verify in Inspector) that gated each step on
+  explicit sign-off before continuing.
+- `testcase-creator-mcp/server.py` — the server itself (~205 lines): typed tool/resource/prompt
+  functions, `ToolError`/`ResourceError`/`PromptError` for readable MCP errors on bad input (unknown
+  `issue_key`, unknown module, invalid `group_by`), `logging` to stderr only (stdout stays clean for
+  the stdio JSON-RPC stream), and a CSV path resolved relative to the file with a `VWO_CSV_PATH`
+  environment-variable override.
+- `testcase-creator-mcp/pyproject.toml` — `fastmcp==2.14.7` pinned, managed with `uv`.
+- `testcase-creator-mcp/README.md` — run/inspect commands and a `claude_desktop_config.json`
+  snippet to register the server with Claude Desktop.
+- `README.md` (chapter-level) — the full MCP Inspector walkthrough below, screenshot by screenshot.
+
+**Q&A — design choices:**
+- **Q: Why read the CSV header and stop for confirmation before writing any code?** A: The prompt's
+  assumed columns (`ID`, `Module`, `Title`...) didn't match the real header
+  (`Issue Key`, `Component`, `Summary`...). Generating code against a guessed schema would have
+  produced a server that silently returned `KeyError`s on every call.
+- **Q: Why three separate exception types (`ToolError`, `ResourceError`, `PromptError`) instead of
+  one generic error?** A: Each MCP primitive surfaces errors through a different protocol channel;
+  using the type FastMCP defines per primitive keeps the Inspector's error display accurate instead
+  of showing a raw Python traceback.
+- **Q: Why does `test_case_stats` accept `"module"` as an alias for the `Component` column?** A: The
+  prompt's example tool signature used `group_by` on "module/priority/status", but the real CSV
+  column is named `Component`. Aliasing keeps the tool's public API matching the spec while mapping
+  onto the real column internally.
+
+**MCP Inspector walkthrough (screenshots 01-09):**
+
+| # | Screenshot | Shows |
+|---|------------|-------|
+| 1 | `01_MCP-Inspector_OnLoad.png` | Inspector disconnected; `STDIO` transport, `fastmcp run server.py --no-banner`. |
+| 2 | `02_MCP-Inspector_Connection_Established.png` | Connected — `initialize` handshake in History, startup log in Server Notifications. |
+| 3 | `03_MCP-Inspector_Resources_List.png` | `testcases://schema` and `testcases://all` listed; templated `testcases://module/{name}` under Resource Templates. |
+| 4 | `04_MCP-Inspector_Prompts_WIth_Example.png` | `review_test_case(issue_key="VWO-1001")` rendered as an actual `role: user` message array. |
+| 5 | `05_MCP-Inspector_Tools_List.png` | All three tools listed with their docstring-derived descriptions. |
+| 6 | `06_MCP-Inspector_Tools_WIth_Example1.png` | `search_test_cases(query="scheduled email", limit=3)` → 3 matching rows, schema-valid. |
+| 7 | `07_MCP-Inspector_Tools_WIth_Example2.png` | `get_test_case(issue_key="VWO-1003")` → full row. |
+| 8 | `08_MCP-Inspector_Tools_WIth_Example3.png` | `test_case_stats(group_by="status")` → `{Ready: 94, Draft: 33, Automated: 60, Deprecated: 13}`. |
+| 9 | `09_MCP-Inspector_Disconnect.png` | Clean disconnect, ready to reconnect. |
+
+Full per-screenshot narrative in `chapter_10_MCP_Creation_VIBE/README.md`.
+
+**Run it:**
+```bash
+cd chapter_10_MCP_Creation_VIBE/testcase-creator-mcp
+uv sync
+uv run fastmcp dev server.py     # opens MCP Inspector in the browser, connected over stdio
+```
+
+Register with Claude Desktop via the `claude_desktop_config.json` snippet in
+`testcase-creator-mcp/README.md` — set `--directory` to this project's absolute path.
+
+---
+
 ## How to Use This Repo
 
 You can read it linearly (chapter 01 → 04) or jump straight to a project:
@@ -859,6 +952,7 @@ You can read it linearly (chapter 01 → 04) or jump straight to a project:
 - **"I want one chat that answers from code, tests, JIRA, docs, and logs at once."** → `chapter_08_QABuddyAI/`.
 - **"I want to generate new test cases or find coverage gaps from a knowledge base."** → `chapter_08_QABuddyAI/` (`generate` / `review` modes).
 - **"I want to track job applications locally."** → `Project_Job_TRACKERAI/`.
+- **"I want to see Tools vs. Resources vs. Prompts as a real, runnable MCP server."** → `chapter_10_MCP_Creation_VIBE/testcase-creator-mcp/`.
 
 ## Requirements
 
@@ -873,6 +967,7 @@ You can read it linearly (chapter 01 → 04) or jump straight to a project:
 - For Chapter 7 Advanced RAG Explorer: **Python 3.10+**, `pip install -r chapter_07_RAG/Advance_RAG/requirements.txt`, and a `GROQ_API_KEY` (or OpenRouter key). No Docker/Qdrant server needed — Qdrant runs embedded.
 - For Chapter 8 QABuddy.ai: **Python 3.13** (`uv venv` recommended), `pip install -r chapter_08_QABuddyAI/requirements.txt`, a `GROQ_API_KEY`, and `git` to clone the two framework repos via `scripts/fetch_repos.sh`. No Docker/Qdrant server needed locally — Docker Compose is only for the droplet deploy path.
 - For Job Tracker AI: **Node.js 20.19+ or 22.12+** and npm for Vite 8.
+- For Chapter 10 MCP server: **Python 3.11+** and **uv** (`uv sync` installs `fastmcp==2.14.7`). No API keys needed — the server only reads the local CSV.
 
 ## Chapter History
 
