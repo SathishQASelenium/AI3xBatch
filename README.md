@@ -89,6 +89,16 @@ mindmap
       Resources - schema, all, templated module URI
       Prompts - review, regression suite
       MCP Inspector verification walkthrough
+    Ch 11 - Python Learning
+      ex_01 Basics - hello, comments, print
+      ex_02 Keywords, Identifiers, Variables
+        Identifier naming rules
+        Dynamic typing
+        BODMAS + math functions
+      ex_03 Literals
+        Multi-line comments
+        Data types, built-in functions
+        User input, string basics
 ```
 
 ---
@@ -229,17 +239,46 @@ mindmap
 │   └── public/
 │       └── favicon.svg
 │
-└── chapter_10_MCP_Creation_VIBE/  FastMCP server: Tools/Resources/Prompts over a VWO test-case CSV
-    ├── README.md                  Inspector walkthrough, screenshots 01-09 explained
-    ├── Prompt.md                  RICE-POT-style build spec used to generate the server
-    ├── resource/
-    │   └── vwo_5000_test_cases.csv    Source dataset (200 rows: Issue Key, Component, Priority, Steps...)
-    ├── 01..09_MCP-Inspector_*.png  Inspector screenshots: connect -> resources -> prompts -> tools -> disconnect
-    └── testcase-creator-mcp/      uv-managed FastMCP project
-        ├── README.md              Install/run/inspect commands + claude_desktop_config.json snippet
-        ├── server.py              Tools + Resources + Prompts, stdio transport, ~205 lines
-        ├── pyproject.toml         fastmcp==2.14.7 pinned
-        └── uv.lock
+├── chapter_10_MCP_Creation_VIBE/  FastMCP server: Tools/Resources/Prompts over a VWO test-case CSV
+│   ├── README.md                  Inspector walkthrough, screenshots 01-09 explained
+│   ├── Prompt.md                  RICE-POT-style build spec used to generate the server
+│   ├── resource/
+│   │   └── vwo_5000_test_cases.csv    Source dataset (200 rows: Issue Key, Component, Priority, Steps...)
+│   ├── 01..09_MCP-Inspector_*.png  Inspector screenshots: connect -> resources -> prompts -> tools -> disconnect
+│   └── testcase-creator-mcp/      uv-managed FastMCP project
+│       ├── README.md              Install/run/inspect commands + claude_desktop_config.json snippet
+│       ├── server.py              Tools + Resources + Prompts, stdio transport, ~205 lines
+│       ├── pyproject.toml         fastmcp==2.14.7 pinned
+│       └── uv.lock
+│
+└── chapter_11_Python_Learning/    Core Python fundamentals - standalone lab scripts, no dependencies
+    ├── ex_01_Python_Basics/
+    │   ├── Lab001_Hello.py            print() basics, multiple args, mixed types
+    │   ├── Lab002_Comment.py          Single-line comments
+    │   └── Lab003_Print.py            print() formatting
+    ├── ex_02_Keywords_Identifier_Variables/
+    │   ├── rules_for_identifier.md    Identifier rules + PEP 8 naming cheat sheet
+    │   ├── Lab004_Keyword.py          keyword.kwlist / iskeyword()
+    │   ├── Lab005_Variable_Part1.py   Variable assignment basics
+    │   ├── Lab006_Identifier.py       Valid/invalid identifier examples
+    │   ├── Lab007_Variables_Names.py  Naming conventions
+    │   ├── Lab008_Dynamically_typed.py    Same name, type() changes per reassignment
+    │   ├── Lab009_Identifier_Rule.py  Identifier rule violations
+    │   ├── Lab010_maths.py            Arithmetic operators
+    │   ├── Lab011_IQ_BODMAS.py        Operator precedence puzzles
+    │   ├── Lab012_Multiple_Variables.py   Multiple assignment / unpacking
+    │   ├── Lab013_Multiple_Prints.py  Multiple print() calls
+    │   ├── Lab014_Math_Functions.py   Built-in math helpers
+    │   └── Lab015_IQ.py               Mixed-operator puzzles
+    └── ex_03_Literals/
+        ├── Lab016_Literals.py             Numeric/string/bool/None literals
+        ├── Lab017_Multi_Comment.py        Multi-line comment style 1
+        ├── Lab018_Multi_Comments.py       Multi-line comment style 2
+        ├── Lab019_Data_Type.py            type(), max(), min()
+        ├── Lab020_BuiltIn_Functions.py    Built-in function survey
+        ├── Lab021_UserInput.py            input() basics
+        ├── Lab022_User_Input_Sum_Of_Two_numbers.py   input() + int() + arithmetic
+        └── Lab023_Strings.py              String basics
 ```
 
 ---
@@ -931,6 +970,48 @@ Register with Claude Desktop via the `claude_desktop_config.json` snippet in
 
 ---
 
+## Chapter 11 — Python Learning
+
+`chapter_11_Python_Learning/` steps back from the AI-agent chapters to cover core Python
+fundamentals as standalone, runnable lab scripts — no frameworks, no dependencies, one concept
+per file. Three exercise sets, in order:
+
+- **`ex_01_Python_Basics/`** — `print()`, comments, running a `.py` file.
+- **`ex_02_Keywords_Identifier_Variables/`** — identifier rules, keywords, dynamic typing,
+  arithmetic/BODMAS, multiple assignment. `rules_for_identifier.md` is the reference doc: allowed
+  characters, can't start with a digit, can't be a keyword, case sensitivity, and the PEP 8 naming
+  table (`snake_case` vars, `UPPER_SNAKE_CASE` constants, `PascalCase` classes).
+- **`ex_03_Literals/`** — literals, multi-line comments, `type()`/built-in functions, `input()`,
+  and string basics.
+
+**Why a QA engineer should care:** these labs underpin every other chapter's automation code —
+`ConfigReader.java`-style dynamic config reading, CSV/JSON parsing in the RAG and MCP chapters,
+and Selenium page objects all lean on the same identifier/typing/input fundamentals drilled here.
+
+**Sample lab (`Lab008_Dynamically_typed.py`) — same name, type changes per reassignment:**
+
+```python
+age = 98
+print(type(age))   # <class 'int'>
+age = "Pramod"
+print(type(age))   # <class 'str'>
+age = True
+print(type(age))   # <class 'bool'>
+```
+
+**Run any lab:**
+```bash
+cd chapter_11_Python_Learning
+python ex_01_Python_Basics/Lab001_Hello.py
+python ex_02_Keywords_Identifier_Variables/Lab011_IQ_BODMAS.py
+python ex_03_Literals/Lab022_User_Input_Sum_Of_Two_numbers.py
+```
+
+Each `LabNNN_*.py` is self-contained — run any one file directly, no setup beyond a Python 3
+interpreter.
+
+---
+
 ## How to Use This Repo
 
 You can read it linearly (chapter 01 → 04) or jump straight to a project:
@@ -953,6 +1034,7 @@ You can read it linearly (chapter 01 → 04) or jump straight to a project:
 - **"I want to generate new test cases or find coverage gaps from a knowledge base."** → `chapter_08_QABuddyAI/` (`generate` / `review` modes).
 - **"I want to track job applications locally."** → `Project_Job_TRACKERAI/`.
 - **"I want to see Tools vs. Resources vs. Prompts as a real, runnable MCP server."** → `chapter_10_MCP_Creation_VIBE/testcase-creator-mcp/`.
+- **"I want to (re)learn core Python before touching the automation code."** → `chapter_11_Python_Learning/`.
 
 ## Requirements
 
@@ -968,6 +1050,7 @@ You can read it linearly (chapter 01 → 04) or jump straight to a project:
 - For Chapter 8 QABuddy.ai: **Python 3.13** (`uv venv` recommended), `pip install -r chapter_08_QABuddyAI/requirements.txt`, a `GROQ_API_KEY`, and `git` to clone the two framework repos via `scripts/fetch_repos.sh`. No Docker/Qdrant server needed locally — Docker Compose is only for the droplet deploy path.
 - For Job Tracker AI: **Node.js 20.19+ or 22.12+** and npm for Vite 8.
 - For Chapter 10 MCP server: **Python 3.11+** and **uv** (`uv sync` installs `fastmcp==2.14.7`). No API keys needed — the server only reads the local CSV.
+- For Chapter 11 Python Learning: **Python 3.x** only, no packages — `python <lab_file>.py` runs any lab directly.
 
 ## Chapter History
 
