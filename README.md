@@ -99,6 +99,21 @@ mindmap
         Multi-line comments
         Data types, built-in functions
         User input, string basics
+        String conversion, escape chars, quote styles
+      ex_04 Operators
+        Arithmetic, comparison, logical
+        Ternary, membership
+      ex_05 Condition Loops
+        if / elif / else
+        Age and even-odd validation
+      ex_06 Switch Match
+        match-case day-of-week + QA test-type selector
+      ex_07 Loops
+        for / while, range, break, continue, pass
+      ex_08 Functions
+        No-param, param, return, default, keyword args
+        Multiple return values
+      Task - GradeCalculator, sum of two/three numbers, quotient-remainder
 ```
 
 ---
@@ -270,15 +285,69 @@ mindmap
     │   ├── Lab013_Multiple_Prints.py  Multiple print() calls
     │   ├── Lab014_Math_Functions.py   Built-in math helpers
     │   └── Lab015_IQ.py               Mixed-operator puzzles
-    └── ex_03_Literals/
-        ├── Lab016_Literals.py             Numeric/string/bool/None literals
-        ├── Lab017_Multi_Comment.py        Multi-line comment style 1
-        ├── Lab018_Multi_Comments.py       Multi-line comment style 2
-        ├── Lab019_Data_Type.py            type(), max(), min()
-        ├── Lab020_BuiltIn_Functions.py    Built-in function survey
-        ├── Lab021_UserInput.py            input() basics
-        ├── Lab022_User_Input_Sum_Of_Two_numbers.py   input() + int() + arithmetic
-        └── Lab023_Strings.py              String basics
+    ├── ex_03_Literals/
+    │   ├── Lab016_Literals.py             Numeric/string/bool/None literals
+    │   ├── Lab017_Multi_Comment.py        Multi-line comment style 1
+    │   ├── Lab018_Multi_Comments.py       Multi-line comment style 2
+    │   ├── Lab019_Data_Type.py            type(), max(), min()
+    │   ├── Lab020_BuiltIn_Functions.py    Built-in function survey
+    │   ├── Lab021_UserInput.py            input() basics
+    │   ├── Lab022_User_Input_Sum_Of_Two_numbers.py   input() + int() + arithmetic
+    │   ├── Lab023_Strings.py              String basics + len()/upper()/lower()
+    │   ├── Lab024_String_Conversion.py    str -> int conversion, type() before/after
+    │   ├── Lab025_Strings.py              String concatenation with str(int)
+    │   ├── Lab026_Literals.py             Decimal/binary/octal/hex number literals
+    │   ├── Lab027_Escape_Char.py          \n \t \b escape sequences
+    │   ├── Lab028_String_Double_Single_Diff.py   Single vs double quote strings
+    │   ├── Lab029_Task1.py                Task: add/sub/mul/div on 2 float inputs
+    │   └── Lab030_Task2.py                Task: quotient + remainder on 2 inputs
+    ├── ex_04_Operators/
+    │   ├── Lab031_Arth_Op.py              Assignment + arithmetic operators
+    │   ├── Lab032_Comparision_Op.py       ==, !=, >, < comparisons
+    │   ├── Lab033_Logic_Operator.py       and / or / not
+    │   ├── Lab034_Operators_P2.py         ** power operator
+    │   ├── Lab035_Operators_P4.py         // floor div vs / true div
+    │   ├── Lab036_Operators_Comparsion.py Comparison operator survey
+    │   ├── Lab037_Operators_Logical.py    not on a bool variable
+    │   ├── Lab038_Operators_Example.py    or / and truth table
+    │   ├── Lab039_Operators_P8.py         != stored in a variable
+    │   ├── Lab040_Operators_P9.py         divmod() unpacking
+    │   ├── Lab040_Ternary_Operator.py     Ternary (conditional) expression
+    │   ├── Lab041_User_Input_Ternary_Operators.py   Ternary with input() age check
+    │   └── Lab042_Memership_Operator.py   in / not in membership operator
+    ├── ex_05_Condition_Loops/
+    │   ├── Lab043_IF_Condition.py             if/else age gate
+    │   ├── Lab043_IF_Condition_Optimized.py   Nested if with input validation range
+    │   ├── Lab044_ELSEIF.py                   Positive-number even/odd check
+    │   └── Lab046_if_else_elif.py             Max of 3 numbers (if/elif/else)
+    ├── ex_06_Switch_Match/
+    │   ├── LabSwitch01.py                 match-case day-of-week
+    │   └── LabSwitch02.py                 match-case QA test-type selector
+    ├── ex_07_Loops/
+    │   ├── Lab048_Loop.py                 range(start, stop, step) basics
+    │   ├── Lab050_For_Looops.py           range() edge case (negative step, no output)
+    │   ├── Lab051_For_While.py            for vs while equivalence
+    │   ├── Lab054_IQ.py                   for + if/else puzzle
+    │   ├── Lab055_For_Break.py            break on condition
+    │   ├── Lab056_pass.py                 pass as a no-op placeholder
+    │   ├── Lab058.py                      Even numbers 0-100 via for + range
+    │   └── Lab059.py                      Odd numbers 0-9 via for + continue
+    ├── ex_08_Functions/
+    │   ├── Lab060_Built_In.py                         Built-in vs user-defined functions
+    │   ├── Lab061_Example_Functions.py                Define + call, no params/return
+    │   ├── Lab062_Example_Functions.py                Type 1 - no return, no params
+    │   ├── Lab063_Function_Parameter.py               Type 2 - params, no return
+    │   ├── Lab064_Type3_Function_return.py            Type 3 - params + return
+    │   ├── Lab065_Function_Default_Parameter.py       Default parameter values
+    │   ├── Lab066_Functions_Return_Multiple_Values.py Multiple return values (tuple unpack)
+    │   ├── Lab067_Functions_Keyword_Arg.py            Keyword arguments, any order
+    │   ├── Lab068_User_Input_Pass_Function.py         input() piped into a function
+    │   └── Lab069_Functions_Types.py                  math module + built-in function survey
+    └── Task/
+        ├── GradeCalculator.py             Score -> letter grade (A-F) from numeric ranges
+        ├── PythonTask1.py                 Add/sub/mul/div, inline + via function returning a tuple
+        ├── PythonTask2.py                 Quotient/remainder via // and % vs divmod()
+        └── Sum_of_three_Numbers.py        Sum of 3 inputs, default 100/200/300 if blank
 ```
 
 ---
@@ -974,19 +1043,36 @@ Register with Claude Desktop via the `claude_desktop_config.json` snippet in
 
 `chapter_11_Python_Learning/` steps back from the AI-agent chapters to cover core Python
 fundamentals as standalone, runnable lab scripts — no frameworks, no dependencies, one concept
-per file. Three exercise sets, in order:
+per file. Eight exercise sets plus a task folder, in order:
 
 - **`ex_01_Python_Basics/`** — `print()`, comments, running a `.py` file.
 - **`ex_02_Keywords_Identifier_Variables/`** — identifier rules, keywords, dynamic typing,
   arithmetic/BODMAS, multiple assignment. `rules_for_identifier.md` is the reference doc: allowed
   characters, can't start with a digit, can't be a keyword, case sensitivity, and the PEP 8 naming
   table (`snake_case` vars, `UPPER_SNAKE_CASE` constants, `PascalCase` classes).
-- **`ex_03_Literals/`** — literals, multi-line comments, `type()`/built-in functions, `input()`,
-  and string basics.
+- **`ex_03_Literals/`** — literals (decimal/binary/octal/hex), multi-line comments,
+  `type()`/built-in functions, `input()`, string basics, string↔int conversion, escape sequences
+  (`\n`/`\t`/`\b`), single vs. double quotes, and two capstone tasks (arithmetic on two inputs;
+  quotient/remainder on two inputs).
+- **`ex_04_Operators/`** — arithmetic, assignment, comparison, logical (`and`/`or`/`not`), power
+  (`**`), floor vs. true division (`//` vs `/`), `divmod()`, ternary expressions, and membership
+  (`in`/`not in`).
+- **`ex_05_Condition_Loops/`** — `if`/`elif`/`else`, nested conditions with input validation,
+  even/odd and max-of-3 problems.
+- **`ex_06_Switch_Match/`** — `match`/`case` for a day-of-week lookup and a QA test-type
+  selector (API/UI/Performance/Security).
+- **`ex_07_Loops/`** — `for`/`while`, `range(start, stop, step)`, `break`, `continue`, `pass`,
+  even/odd number generation.
+- **`ex_08_Functions/`** — built-in vs. user-defined functions, the four parameter/return
+  combinations, default parameters, keyword arguments, multiple return values (tuple unpacking).
+- **`Task/`** — small capstone problems combining the above: `GradeCalculator.py` (score → letter
+  grade), `PythonTask1.py`/`PythonTask2.py` (arithmetic + quotient/remainder, done twice — inline
+  and via a function), `Sum_of_three_Numbers.py` (sum with default fallback values).
 
 **Why a QA engineer should care:** these labs underpin every other chapter's automation code —
 `ConfigReader.java`-style dynamic config reading, CSV/JSON parsing in the RAG and MCP chapters,
-and Selenium page objects all lean on the same identifier/typing/input fundamentals drilled here.
+and Selenium page objects all lean on the same identifier/typing/input/control-flow/function
+fundamentals drilled here.
 
 **Sample lab (`Lab008_Dynamically_typed.py`) — same name, type changes per reassignment:**
 
@@ -1005,6 +1091,8 @@ cd chapter_11_Python_Learning
 python ex_01_Python_Basics/Lab001_Hello.py
 python ex_02_Keywords_Identifier_Variables/Lab011_IQ_BODMAS.py
 python ex_03_Literals/Lab022_User_Input_Sum_Of_Two_numbers.py
+python ex_06_Switch_Match/LabSwitch02.py
+python Task/GradeCalculator.py
 ```
 
 Each `LabNNN_*.py` is self-contained — run any one file directly, no setup beyond a Python 3

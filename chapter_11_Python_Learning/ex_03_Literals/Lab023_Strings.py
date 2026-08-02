@@ -5,3 +5,17 @@ print(type(value))
 a_int = int(value)
 print(a_int)
 print(type(a_int))
+
+# Strings
+name = "Pramod"
+c = "C"
+c1 = "C"
+print(type(c))
+print(type(c1))
+
+# <class 'str'>
+# <class 'str'>
+
+print(len(name))
+print(name.upper())
+print(name.lower())
