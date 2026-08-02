@@ -131,7 +131,7 @@ mindmap
       ex_13 List
         Indexing, append/extend/insert/remove
         pop/clear/sort/index/count
-        Slicing, nested lists, mutability vs copy()
+        Slicing, nested lists, mutability vs copy method
       ex_14 Tuple
         Immutability, single-element tuple syntax
         list <-> tuple conversion
