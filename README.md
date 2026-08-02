@@ -113,6 +113,29 @@ mindmap
       ex_08 Functions
         No-param, param, return, default, keyword args
         Multiple return values
+        *args infinite positional args
+        Nested/inner function scope IQ
+      ex_09 Functions Scopes
+        Local vs global variables
+        Shadowing a global inside a function
+        Inner function closures
+      ex_10 Decorators
+        Wrapper functions, @syntax
+        Stacked decorators, execution order
+        Timing decorator with time module
+      ex_11 Type Conversion
+        int/str/float/bool/list/tuple/set/dict/complex
+      ex_12 Lambda Expressions
+        Single-line lambda vs def
+        Multi-arg lambda, ternary inside lambda
+      ex_13 List
+        Indexing, append/extend/insert/remove
+        pop/clear/sort/index/count
+        Slicing, nested lists, mutability vs copy()
+      ex_14 Tuple
+        Immutability, single-element tuple syntax
+        list <-> tuple conversion
+        Real-world use - fixed API URL sets
       Task - GradeCalculator, sum of two/three numbers, quotient-remainder
 ```
 
@@ -342,7 +365,36 @@ mindmap
     │   ├── Lab066_Functions_Return_Multiple_Values.py Multiple return values (tuple unpack)
     │   ├── Lab067_Functions_Keyword_Arg.py            Keyword arguments, any order
     │   ├── Lab068_User_Input_Pass_Function.py         input() piped into a function
-    │   └── Lab069_Functions_Types.py                  math module + built-in function survey
+    │   ├── Lab069_Functions_Types.py                  math module + built-in function survey
+    │   ├── Lab071_IQ.py                               Default + positional + keyword args mixed
+    │   ├── Lab072_Infinite_Args.py                    *args - variable positional args as a tuple
+    │   ├── Lab073_Real_Args.py                        *args real-world example - pizza toppings
+    │   └── LabIQ02.py                                 Inner function defined + called inside outer, scope IQ
+    ├── ex_09_Functions_Scopes/
+    │   ├── Lab075_Local_Variable.py       Local var inaccessible outside function, global var is
+    │   ├── Lab076.py                      Global readable from any function; local stays private
+    │   ├── Lab077_Local_Var.py            Local assignment shadows a same-named global inside the function
+    │   └── Lab078_Inner_Functions.py      Outer var visible to inner function; inner locals stay isolated
+    ├── ex_10_Decorators/
+    │   ├── Lab079_Decorators.py           @decorator adding before/after behaviour, two decorated funcs
+    │   ├── Lab080_Decorator.py            Minimal before/after-test wrapper decorator
+    │   ├── Lab081.py                      Same before/after shape written without a decorator (manual calls)
+    │   ├── Lab082.py                      Stacked @time_decorator + @print_logs, execution timing via time module
+    │   └── Lab083.py                      Two stacked decorators, prints call order top-down
+    ├── ex_11_TypeConversion/
+    │   └── Lab087_Type_Conversion.py      str -> int via int(), type() before/after
+    ├── ex_12_Lambda_Exp/
+    │   ├── Lab090.py                      def vs lambda - same triple-a-number logic
+    │   ├── Lab091_Lambda.py               lambda with 1/2/3 args, compared against equivalent def
+    │   └── Lab094_User_Input_ODD_Even.py  lambda with ternary, input() piped straight into a lambda call
+    ├── ex_13_LIST/
+    │   ├── Lab096_List.py                 List basics - type(), len(), indexing, mixed-type list
+    │   ├── Lab097.py                      append/extend/insert/remove, mutability, copy() vs same-reference
+    │   └── Lab098_POP.py                  pop/clear/sort/index/count, slicing, nested lists, del
+    ├── ex_14_Tuple/
+    │   ├── Lab099_Tuple.py                Tuple immutability, mixed types, single-element (3,) syntax
+    │   ├── Lab100_Tuple.py                list vs tuple mutability, tuple() / list() conversion, empty tuple/list
+    │   └── Lab101.py                      len()/in on tuples, list<->tuple round trip, iterating a tuple
     └── Task/
         ├── GradeCalculator.py             Score -> letter grade (A-F) from numeric ranges
         ├── PythonTask1.py                 Add/sub/mul/div, inline + via function returning a tuple
@@ -1043,7 +1095,7 @@ Register with Claude Desktop via the `claude_desktop_config.json` snippet in
 
 `chapter_11_Python_Learning/` steps back from the AI-agent chapters to cover core Python
 fundamentals as standalone, runnable lab scripts — no frameworks, no dependencies, one concept
-per file. Eight exercise sets plus a task folder, in order:
+per file. Fourteen exercise sets plus a task folder, in order:
 
 - **`ex_01_Python_Basics/`** — `print()`, comments, running a `.py` file.
 - **`ex_02_Keywords_Identifier_Variables/`** — identifier rules, keywords, dynamic typing,
@@ -1064,7 +1116,26 @@ per file. Eight exercise sets plus a task folder, in order:
 - **`ex_07_Loops/`** — `for`/`while`, `range(start, stop, step)`, `break`, `continue`, `pass`,
   even/odd number generation.
 - **`ex_08_Functions/`** — built-in vs. user-defined functions, the four parameter/return
-  combinations, default parameters, keyword arguments, multiple return values (tuple unpacking).
+  combinations, default parameters, keyword arguments, multiple return values (tuple unpacking),
+  `*args` for infinite positional arguments, and inner-function scope IQ puzzles.
+- **`ex_09_Functions_Scopes/`** — local vs. global variables, why a local var can't leak out of a
+  function, shadowing a global name with a local assignment inside a function, and inner-function
+  closures (outer var visible to an inner function; the inner function's own locals stay isolated).
+- **`ex_10_Decorators/`** — a decorator as a function that wraps another function: `@syntax`
+  sugar, before/after behaviour (`add_security`, `before_after_ui_test`), the same shape written
+  manually without a decorator for comparison, stacking two decorators and reading execution order
+  top-down, and a `time`-module timing decorator around real test functions.
+- **`ex_11_TypeConversion/`** — explicit type conversion with `int()`/`str()`/`float()`/`bool()`/
+  `list()`/`tuple()`/`set()`/`dict()`/`complex()`, `type()` before and after.
+- **`ex_12_Lambda_Exp/`** — `lambda` as a single-line function: 1/2/3-argument lambdas compared
+  against an equivalent `def`, a ternary expression inside a lambda, and `input()` piped straight
+  into a lambda call.
+- **`ex_13_LIST/`** — list basics (`type()`, `len()`, indexing, mixed-type lists), mutating
+  methods (`append`/`extend`/`insert`/`remove`/`pop`/`clear`/`sort`), `index()`/`count()`,
+  `max()`/`min()`/`sum()`, slicing, nested lists, and mutability vs. `copy()`.
+- **`ex_14_Tuple/`** — tuple immutability, mixed-type tuples, the single-element `(3,)` comma
+  trap, `list()`↔`tuple()` conversion, iterating a tuple, and a real-world use case (a fixed set
+  of API URLs that shouldn't be accidentally mutated).
 - **`Task/`** — small capstone problems combining the above: `GradeCalculator.py` (score → letter
   grade), `PythonTask1.py`/`PythonTask2.py` (arithmetic + quotient/remainder, done twice — inline
   and via a function), `Sum_of_three_Numbers.py` (sum with default fallback values).
@@ -1092,6 +1163,10 @@ python ex_01_Python_Basics/Lab001_Hello.py
 python ex_02_Keywords_Identifier_Variables/Lab011_IQ_BODMAS.py
 python ex_03_Literals/Lab022_User_Input_Sum_Of_Two_numbers.py
 python ex_06_Switch_Match/LabSwitch02.py
+python ex_08_Functions/Lab072_Infinite_Args.py
+python ex_10_Decorators/Lab082.py
+python ex_13_LIST/Lab098_POP.py
+python ex_14_Tuple/Lab101.py
 python Task/GradeCalculator.py
 ```
 
