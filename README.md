@@ -132,11 +132,28 @@ mindmap
         Indexing, append/extend/insert/remove
         pop/clear/sort/index/count
         Slicing, nested lists, mutability vs copy method
+        List_Methods_Notes.md cheat sheet
       ex_14 Tuple
         Immutability, single-element tuple syntax
         list <-> tuple conversion
         Real-world use - fixed API URL sets
+      ex_15 Set
+        Uniqueness, dedupe a list
+        union / intersection / difference
+        Set comprehension, frozenset
+      ex_16 Map and Filter
+        filter with def and lambda
+        map same-size transform
+        QA use - PASS results, ms to seconds
+      ex_17 Dict
+        Key-value CRUD, nested dicts
+        dict of lists, zip to dict, merge with pipe
+        get with default - char frequency counter
+      ex_18 OOPs in Python
+        01 Class and Object - class attrs, methods, self
+        02-08 Constructor to Static - scaffolded
       Task - GradeCalculator, sum of two/three numbers, quotient-remainder
+      Task - Set based non-repeating character problems
 ```
 
 ---
@@ -390,16 +407,51 @@ mindmap
     ├── ex_13_LIST/
     │   ├── Lab096_List.py                 List basics - type(), len(), indexing, mixed-type list
     │   ├── Lab097.py                      append/extend/insert/remove, mutability, copy() vs same-reference
-    │   └── Lab098_POP.py                  pop/clear/sort/index/count, slicing, nested lists, del
+    │   ├── Lab098_POP.py                  pop/clear/sort/index/count, slicing, nested lists, del
+    │   └── List_Methods_Notes.md          List method cheat sheet - mutating vs non-mutating
     ├── ex_14_Tuple/
     │   ├── Lab099_Tuple.py                Tuple immutability, mixed types, single-element (3,) syntax
     │   ├── Lab100_Tuple.py                list vs tuple mutability, tuple() / list() conversion, empty tuple/list
     │   └── Lab101.py                      len()/in on tuples, list<->tuple round trip, iterating a tuple
+    ├── ex_15_SET_MAP_DICT/
+    │   ├── Lab102.py                      Set literal {}, duplicates silently dropped
+    │   ├── Lab103_SET.py                  set() over list/tuple, add/remove, union/intersection/difference
+    │   ├── Lab104_Set_Advance.py          len()/iterate a set, add() is idempotent
+    │   └── Lab105_Extra.py                Set comprehension, frozenset immutability
+    ├── ex_16_MAP_Filters/
+    │   ├── Lab106.py                      filter() with a named predicate - even numbers
+    │   ├── Lab107_Lab.py                  filter() with lambda - keep only PASS test results
+    │   ├── Lab108.py                      filter() dropping empty strings, falsy return values
+    │   ├── Lab109_Map.py                  map() with a named function - squares, same-size output
+    │   ├── Lab110_Map2.py                 map() + str.upper() over a name list
+    │   └── Lab111_Map_IQ.py               map() + lambda - response times ms -> seconds
+    ├── ex_17_Dict/
+    │   ├── Lab112_Dict.py                 Dict CRUD - read, update, del, .items() loop, `in` on keys
+    │   ├── Lab113_Dict2.py                Duplicate keys - last one wins; reassigning a value
+    │   ├── Lab114_Dict_IQ.py              Nested dicts inside a list, chained [] access
+    │   ├── Lab115_Dict_IQ2.py             Same shape with 3 records - indexing into nested address
+    │   ├── Lab116_Dict_Imp.py             dict(zip()) with uneven lists, dict1 | dict2 merge, .get()
+    │   ├── Lab117_IQ.py                   Character frequency counter via .get(char, 0) + 1
+    │   ├── Lab118_IQ.py                   Dict equality ignores key order
+    │   └── Lab119_Count_Vowel.py          Count + collect vowels in a string
+    ├── ex_18_OOPs_Python/                 OOP pillars, one folder per concept
+    │   ├── 01_Class_Object/
+    │   │   ├── Lab120_Class.py            Person class - attributes, 4 method shapes (arg/return combos), self
+    │   │   └── Lab121_Class_DOG.py        Dog class - object ref vs object, self.name, why print(method()) shows None
+    │   ├── 02_Constructor/                (scaffolded - __init__ labs)
+    │   ├── 03_Instance_Variable/          (scaffolded)
+    │   ├── 04_Encapsulation/              (scaffolded)
+    │   ├── 05_Inheritance/                (scaffolded)
+    │   ├── 06_Polymorphism/               (scaffolded)
+    │   ├── 07_Abstraction/                (scaffolded)
+    │   └── 08_Static/                     (scaffolded)
     └── Task/
         ├── GradeCalculator.py             Score -> letter grade (A-F) from numeric ranges
         ├── PythonTask1.py                 Add/sub/mul/div, inline + via function returning a tuple
         ├── PythonTask2.py                 Quotient/remainder via // and % vs divmod()
-        └── Sum_of_three_Numbers.py        Sum of 3 inputs, default 100/200/300 if blank
+        ├── Sum_of_three_Numbers.py        Sum of 3 inputs, default 100/200/300 if blank
+        ├── SET_First_NonRepeatingChar.py  First non-repeating char via str.count() + early return
+        └── SET_All_NonRepeatingChar.py    All non-repeating chars collected into a set
 ```
 
 ---
@@ -1095,7 +1147,7 @@ Register with Claude Desktop via the `claude_desktop_config.json` snippet in
 
 `chapter_11_Python_Learning/` steps back from the AI-agent chapters to cover core Python
 fundamentals as standalone, runnable lab scripts — no frameworks, no dependencies, one concept
-per file. Fourteen exercise sets plus a task folder, in order:
+per file. Eighteen exercise sets plus a task folder, in order:
 
 - **`ex_01_Python_Basics/`** — `print()`, comments, running a `.py` file.
 - **`ex_02_Keywords_Identifier_Variables/`** — identifier rules, keywords, dynamic typing,
@@ -1133,12 +1185,38 @@ per file. Fourteen exercise sets plus a task folder, in order:
 - **`ex_13_LIST/`** — list basics (`type()`, `len()`, indexing, mixed-type lists), mutating
   methods (`append`/`extend`/`insert`/`remove`/`pop`/`clear`/`sort`), `index()`/`count()`,
   `max()`/`min()`/`sum()`, slicing, nested lists, and mutability vs. `copy()`.
+  `List_Methods_Notes.md` is the cheat sheet — which methods mutate in place and which return a
+  new value (the `sort()` vs `sorted()` class of bug).
 - **`ex_14_Tuple/`** — tuple immutability, mixed-type tuples, the single-element `(3,)` comma
   trap, `list()`↔`tuple()` conversion, iterating a tuple, and a real-world use case (a fixed set
   of API URLs that shouldn't be accidentally mutated).
+- **`ex_15_SET_MAP_DICT/`** — sets as unordered collections of unique values: duplicates dropped
+  silently on literal creation, `set(list)` as the one-line dedupe, `add()`/`remove()`, the four
+  algebra operations (`|`/`union`, `&`/`intersection`, `-`/`difference` in both directions), set
+  comprehensions, and `frozenset` for an immutable set.
+- **`ex_16_MAP_Filters/`** — `filter()` keeps a subset (even numbers, only `PASS` results, drop
+  empty strings) while `map()` transforms every element and always returns the same-size result
+  (squares, uppercase names, response times ms → seconds). Both shown with a named `def` first,
+  then the `lambda` equivalent; both need `list()` around them because they return lazy iterators.
+- **`ex_17_Dict/`** — key-value CRUD (read, update, `del`, `.items()` loop, `in` tests keys not
+  values), duplicate keys where the last one wins, nested dicts inside a list with chained `[]`
+  access, `dict(zip(keys, values))` (extra keys silently dropped when the lists are uneven),
+  `dict1 | dict2` merge, `.get(key, default)` — including the classic character-frequency counter
+  built on `char_count.get(char, 0) + 1` — and dict equality ignoring key order.
+- **`ex_18_OOPs_Python/`** — object-oriented Python, one folder per pillar.
+  `01_Class_Object/` is built out: `Lab120_Class.py` defines a `Person` class showing class
+  attributes and all four method shapes (arg/no-arg × return/no-return) plus what `self` is for;
+  `Lab121_Class_DOG.py` covers object vs. object reference (`chow = Dog()`), why a method body
+  must say `self.name` and not bare `name`, and why `print(chow.talk())` prints an extra `None` —
+  a function without an explicit `return` returns `None`. Folders `02_Constructor` through
+  `08_Static` (instance variables, encapsulation, inheritance, polymorphism, abstraction, static)
+  are scaffolded for the next labs.
 - **`Task/`** — small capstone problems combining the above: `GradeCalculator.py` (score → letter
   grade), `PythonTask1.py`/`PythonTask2.py` (arithmetic + quotient/remainder, done twice — inline
-  and via a function), `Sum_of_three_Numbers.py` (sum with default fallback values).
+  and via a function), `Sum_of_three_Numbers.py` (sum with default fallback values), and two
+  set-based string problems — `SET_First_NonRepeatingChar.py` (first non-repeating character, via
+  `string.count(char) == 1` with an early `return`) and `SET_All_NonRepeatingChar.py` (all of
+  them, collected into a set).
 
 **Why a QA engineer should care:** these labs underpin every other chapter's automation code —
 `ConfigReader.java`-style dynamic config reading, CSV/JSON parsing in the RAG and MCP chapters,
@@ -1156,6 +1234,20 @@ age = True
 print(type(age))   # <class 'bool'>
 ```
 
+**Sample lab (`ex_18_OOPs_Python/01_Class_Object/Lab121_Class_DOG.py`) — object ref, `self`, and the phantom `None`:**
+
+```python
+class Dog:
+    name = None          # class attribute, shared default
+
+    def talk(self):      # self = the instance the method was called on
+        print("Talking")
+
+chow = Dog()             # Dog() creates the object; chow is the reference to it
+print(chow.name)         # None  - falls back to the class attribute
+print(chow.talk())       # Talking, then None - talk() has no return statement
+```
+
 **Run any lab:**
 ```bash
 cd chapter_11_Python_Learning
@@ -1167,7 +1259,12 @@ python ex_08_Functions/Lab072_Infinite_Args.py
 python ex_10_Decorators/Lab082.py
 python ex_13_LIST/Lab098_POP.py
 python ex_14_Tuple/Lab101.py
+python ex_15_SET_MAP_DICT/Lab103_SET.py
+python ex_16_MAP_Filters/Lab107_Lab.py
+python ex_17_Dict/Lab117_IQ.py
+python ex_18_OOPs_Python/01_Class_Object/Lab121_Class_DOG.py
 python Task/GradeCalculator.py
+python Task/SET_First_NonRepeatingChar.py
 ```
 
 Each `LabNNN_*.py` is self-contained — run any one file directly, no setup beyond a Python 3
@@ -1198,6 +1295,7 @@ You can read it linearly (chapter 01 → 04) or jump straight to a project:
 - **"I want to track job applications locally."** → `Project_Job_TRACKERAI/`.
 - **"I want to see Tools vs. Resources vs. Prompts as a real, runnable MCP server."** → `chapter_10_MCP_Creation_VIBE/testcase-creator-mcp/`.
 - **"I want to (re)learn core Python before touching the automation code."** → `chapter_11_Python_Learning/`.
+- **"I want Python OOP (classes, `self`, constructors) before writing page objects."** → `chapter_11_Python_Learning/ex_18_OOPs_Python/`.
 
 ## Requirements
 
