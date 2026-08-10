@@ -151,7 +151,11 @@ mindmap
         get with default - char frequency counter
       ex_18 OOPs in Python
         01 Class and Object - class attrs, methods, self
-        02-08 Constructor to Static - scaffolded
+        02 Constructor - default vs parameterized __init__
+        03 Instance Variable - global vs instance vs local
+        04 Encapsulation - public, protected, private access levels
+        05 Inheritance - single, multiple, multilevel, hierarchical, hybrid, MRO
+        06-08 Polymorphism to Static - scaffolded
       Task - GradeCalculator, sum of two/three numbers, quotient-remainder
       Task - Set based non-repeating character problems
 ```
@@ -438,10 +442,32 @@ mindmap
     │   ├── 01_Class_Object/
     │   │   ├── Lab120_Class.py            Person class - attributes, 4 method shapes (arg/return combos), self
     │   │   └── Lab121_Class_DOG.py        Dog class - object ref vs object, self.name, why print(method()) shows None
-    │   ├── 02_Constructor/                (scaffolded - __init__ labs)
-    │   ├── 03_Instance_Variable/          (scaffolded)
-    │   ├── 04_Encapsulation/              (scaffolded)
-    │   ├── 05_Inheritance/                (scaffolded)
+    │   ├── 02_Constructor/
+    │   │   ├── Lab122.py                  Default __init__ - runs on object creation, self.model
+    │   │   ├── Lab123_PC.py               Parameterized __init__ - no default ctor once PC exists
+    │   │   ├── Lab124_IQ.py               Two objects, one class attr - both read None
+    │   │   ├── Lab125_USer_Input_Class.py input() inside __init__, display_values()
+    │   │   ├── Lab126_IQ.py               Calc class - sum/sub/mul/div on two float inputs
+    │   │   └── Lab127_Baby.py             Two objects, independent instance state
+    │   ├── 03_Instance_Variable/
+    │   │   └── Lab128_Instance_Varaible.py  Global vs class/instance vs local var scope in one class
+    │   ├── 04_Encapsulation/
+    │   │   ├── Lab129_Encap.py            Car - ctor args bundled as instance state
+    │   │   ├── Lab130_Encap.py            VWOLoginPage - hardcoded creds compare (bad practice demo)
+    │   │   ├── .env.example               VWO_USERNAME / VWO_PASSWORD template (real .env gitignored)
+    │   │   ├── Lab131_Encap_NICE.py       Same page, creds from .env via python-dotenv + os.getenv
+    │   │   ├── Lab132_Encap_Better.py     public / _protected / __private naming, method-local private
+    │   │   ├── Lab133_Encap_Example.py    Bank - public balance, __account_number behind auth gate
+    │   │   ├── Lab134_Ecap_REAL.py        Private var + private method, only reachable from inside
+    │   │   └── Lab135_PPP.py              Test class - driver / _config / __api__key access levels
+    │   ├── 05_Inheritance/
+    │   │   ├── Lab_136_01_SI.py           Single - LoginTest(BaseTest), inherits driver + setUp()
+    │   │   ├── Lab_137_02_MI.py           Multiple - TestHybrid(APIBase, DBBase)
+    │   │   ├── Lab_138_03_MI_002.py       MRO - same method name in both parents, order decides
+    │   │   ├── Lab_139__MutiLevel.py      Multilevel - TestSuite -> BaseTest -> UITest
+    │   │   ├── Lab_140_HI.py              Hierarchical - LoginTest + SignupTest share one BaseTest
+    │   │   ├── Lab_141_Hybrid.py          Hybrid - diamond Base -> A,B -> C
+    │   │   └── Lab_142_REAL.py            BaseTest(browser) ctor reused by Login/Signup tests
     │   ├── 06_Polymorphism/               (scaffolded)
     │   ├── 07_Abstraction/                (scaffolded)
     │   └── 08_Static/                     (scaffolded)
@@ -1203,14 +1229,42 @@ per file. Eighteen exercise sets plus a task folder, in order:
   access, `dict(zip(keys, values))` (extra keys silently dropped when the lists are uneven),
   `dict1 | dict2` merge, `.get(key, default)` — including the classic character-frequency counter
   built on `char_count.get(char, 0) + 1` — and dict equality ignoring key order.
-- **`ex_18_OOPs_Python/`** — object-oriented Python, one folder per pillar.
-  `01_Class_Object/` is built out: `Lab120_Class.py` defines a `Person` class showing class
-  attributes and all four method shapes (arg/no-arg × return/no-return) plus what `self` is for;
-  `Lab121_Class_DOG.py` covers object vs. object reference (`chow = Dog()`), why a method body
-  must say `self.name` and not bare `name`, and why `print(chow.talk())` prints an extra `None` —
-  a function without an explicit `return` returns `None`. Folders `02_Constructor` through
-  `08_Static` (instance variables, encapsulation, inheritance, polymorphism, abstraction, static)
-  are scaffolded for the next labs.
+- **`ex_18_OOPs_Python/`** — object-oriented Python, one folder per pillar. Five folders built out:
+  - **`01_Class_Object/`** — `Lab120_Class.py` defines a `Person` class showing class attributes
+    and all four method shapes (arg/no-arg × return/no-return) plus what `self` is for;
+    `Lab121_Class_DOG.py` covers object vs. object reference (`chow = Dog()`), why a method body
+    must say `self.name` and not bare `name`, and why `print(chow.talk())` prints an extra `None` —
+    a function without an explicit `return` returns `None`.
+  - **`02_Constructor/`** — `__init__` as the method Python calls automatically on object creation:
+    the default constructor (`Lab122.py`), the parameterized one (`Lab123_PC.py` — and the trap that
+    defining a parameterized constructor removes the no-arg one, so `Dog()` now fails), two objects
+    reading the same untouched class attribute (`Lab124_IQ.py`), taking `input()` inside the
+    constructor (`Lab125_USer_Input_Class.py`), a `Calc` class with `sum`/`sub`/`mul`/`div` over two
+    float inputs (`Lab126_IQ.py`), and two `Baby` objects proving each keeps its own instance state
+    (`Lab127_Baby.py`).
+  - **`03_Instance_Variable/`** — the three scopes side by side in one file: a module-level global
+    `a`, a class/instance attribute `b` read via `self.b`, and a method-local `l` that dies with the
+    call. A method can read the global without declaring it; a local can't be seen from another
+    method.
+  - **`04_Encapsulation/`** — bundling data with the methods that use it, then restricting access.
+    `Lab129_Encap.py` bundles constructor args as instance state; `Lab130_Encap.py` compares login
+    input against **hardcoded** credentials (deliberately the wrong way), and `Lab131_Encap_NICE.py`
+    fixes it by pulling them from a `.env` file via `python-dotenv` + `os.getenv()`.
+    `Lab132_Encap_Better.py`, `Lab134_Ecap_REAL.py`, and `Lab135_PPP.py` drill the three access
+    levels — `public`, `_protected` (convention only), `__private` (name-mangled, `AttributeError`
+    from outside) — including private *methods*, not just variables.
+    `Lab133_Encap_Example.py` is the payoff: a `Bank` class with a public `balance` but a
+    `__account_number` that only comes out through an `is_auth` gate.
+  - **`05_Inheritance/`** — all five forms, each framed as a test-framework class hierarchy:
+    **single** (`LoginTest(BaseTest)` inherits `driver` + `setUp()`), **multiple**
+    (`TestHybrid(APIBase, DBBase)`), **MRO** (`Lab_138_03_MI_002.py` — both parents define
+    `money()`, so the order in the class declaration decides which one runs; `Child(Father1,Father2)`
+    vs `Child2(Father2,Father1)` print different things), **multilevel**
+    (`TestSuite → BaseTest → UITest`), **hierarchical** (`LoginTest` + `SignupTest` sharing one
+    `BaseTest`), and **hybrid** (the diamond `Base → A, B → C`). `Lab_142_REAL.py` ties it back to
+    real automation — a `BaseTest(browser)` constructor reused by both child test classes, which is
+    exactly the `BaseTest`/page-object shape used in Chapter 02's Selenium framework.
+  - Folders `06_Polymorphism`, `07_Abstraction`, and `08_Static` are scaffolded for the next labs.
 - **`Task/`** — small capstone problems combining the above: `GradeCalculator.py` (score → letter
   grade), `PythonTask1.py`/`PythonTask2.py` (arithmetic + quotient/remainder, done twice — inline
   and via a function), `Sum_of_three_Numbers.py` (sum with default fallback values), and two
@@ -1248,6 +1302,27 @@ print(chow.name)         # None  - falls back to the class attribute
 print(chow.talk())       # Talking, then None - talk() has no return statement
 ```
 
+**Sample lab (`ex_18_OOPs_Python/05_Inheritance/Lab_138_03_MI_002.py`) — MRO: declaration order wins:**
+
+```python
+class Father1:
+    def money(self): print("F1 Money")
+
+class Father2:
+    def money(self): print("F2 Money")
+
+class Child(Father1, Father2):    # MRO: Child -> Father1 -> Father2
+    def give_money(self):
+        self.money()              # F1 Money
+
+class Child2(Father2, Father1):   # MRO: Child2 -> Father2 -> Father1
+    def give_money(self):
+        self.money()              # F2 Money
+```
+
+Same two parents, same method name — only the order in the class declaration changed. That is the
+Method Resolution Order, and it's the bug you hit when two mixins both define `setup()`.
+
 **Run any lab:**
 ```bash
 cd chapter_11_Python_Learning
@@ -1263,12 +1338,24 @@ python ex_15_SET_MAP_DICT/Lab103_SET.py
 python ex_16_MAP_Filters/Lab107_Lab.py
 python ex_17_Dict/Lab117_IQ.py
 python ex_18_OOPs_Python/01_Class_Object/Lab121_Class_DOG.py
+python ex_18_OOPs_Python/02_Constructor/Lab123_PC.py
+python ex_18_OOPs_Python/03_Instance_Variable/Lab128_Instance_Varaible.py
+python ex_18_OOPs_Python/04_Encapsulation/Lab133_Encap_Example.py
+python ex_18_OOPs_Python/05_Inheritance/Lab_138_03_MI_002.py
 python Task/GradeCalculator.py
 python Task/SET_First_NonRepeatingChar.py
 ```
 
 Each `LabNNN_*.py` is self-contained — run any one file directly, no setup beyond a Python 3
-interpreter.
+interpreter. One exception: `ex_18_OOPs_Python/04_Encapsulation/Lab131_Encap_NICE.py` needs
+`pip install python-dotenv` and a local `.env` (gitignored) alongside it:
+
+```bash
+VWO_USERNAME=your_email@example.com
+VWO_PASSWORD=your_password
+```
+
+Every other lab is stdlib only.
 
 ---
 
@@ -1296,6 +1383,7 @@ You can read it linearly (chapter 01 → 04) or jump straight to a project:
 - **"I want to see Tools vs. Resources vs. Prompts as a real, runnable MCP server."** → `chapter_10_MCP_Creation_VIBE/testcase-creator-mcp/`.
 - **"I want to (re)learn core Python before touching the automation code."** → `chapter_11_Python_Learning/`.
 - **"I want Python OOP (classes, `self`, constructors) before writing page objects."** → `chapter_11_Python_Learning/ex_18_OOPs_Python/`.
+- **"I want to understand why my two mixins fight over the same method."** → `chapter_11_Python_Learning/ex_18_OOPs_Python/05_Inheritance/Lab_138_03_MI_002.py` (MRO).
 
 ## Requirements
 
@@ -1311,7 +1399,7 @@ You can read it linearly (chapter 01 → 04) or jump straight to a project:
 - For Chapter 8 QABuddy.ai: **Python 3.13** (`uv venv` recommended), `pip install -r chapter_08_QABuddyAI/requirements.txt`, a `GROQ_API_KEY`, and `git` to clone the two framework repos via `scripts/fetch_repos.sh`. No Docker/Qdrant server needed locally — Docker Compose is only for the droplet deploy path.
 - For Job Tracker AI: **Node.js 20.19+ or 22.12+** and npm for Vite 8.
 - For Chapter 10 MCP server: **Python 3.11+** and **uv** (`uv sync` installs `fastmcp==2.14.7`). No API keys needed — the server only reads the local CSV.
-- For Chapter 11 Python Learning: **Python 3.x** only, no packages — `python <lab_file>.py` runs any lab directly.
+- For Chapter 11 Python Learning: **Python 3.x** only, no packages — `python <lab_file>.py` runs any lab directly. Single exception: `ex_18_OOPs_Python/04_Encapsulation/Lab131_Encap_NICE.py` needs `pip install python-dotenv` plus a local `.env` (`VWO_USERNAME`, `VWO_PASSWORD`) — gitignored, so create your own.
 
 ## Chapter History
 
