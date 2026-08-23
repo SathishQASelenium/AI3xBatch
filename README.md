@@ -155,7 +155,12 @@ mindmap
         03 Instance Variable - global vs instance vs local
         04 Encapsulation - public, protected, private access levels
         05 Inheritance - single, multiple, multilevel, hierarchical, hybrid, MRO
-        06-08 Polymorphism to Static - scaffolded
+        06 Polymorphism - method overriding, no true overloading (last def wins)
+        07 Abstraction - ABC, @abstractmethod, ExcelReader/Browser real-world shape
+        08 Static - static vars, @staticmethod, non-static contrast
+        09 Exceptions - built-in exceptions, custom exceptions, ExceptionGroup
+        10 Modules - os module (cwd, listdir, environ)
+      ex_19 Package - local module import, package with __init__.py + multiple submodules
       Task - GradeCalculator, sum of two/three numbers, quotient-remainder
       Task - Set based non-repeating character problems
 ```
@@ -468,9 +473,41 @@ mindmap
     │   │   ├── Lab_140_HI.py              Hierarchical - LoginTest + SignupTest share one BaseTest
     │   │   ├── Lab_141_Hybrid.py          Hybrid - diamond Base -> A,B -> C
     │   │   └── Lab_142_REAL.py            BaseTest(browser) ctor reused by Login/Signup tests
-    │   ├── 06_Polymorphism/               (scaffolded)
-    │   ├── 07_Abstraction/                (scaffolded)
-    │   └── 08_Static/                     (scaffolded)
+    │   ├── 06_Polymorphism/
+    │   │   ├── MethodOverloading/
+    │   │   │   ├── Lab_143_MO.py          Redefining a method overrides it - Python has no true overloading
+    │   │   │   ├── Lab_144_MO_ALL.py      Same point, more redefinitions of one method name
+    │   │   │   ├── Lab_145_MO.py          Same point, variant args
+    │   │   │   └── Lab_146_IQ.py          Browser.make_http_request - default-arg trick fakes overloading
+    │   │   └── MethodOverrding/
+    │   │       ├── Lab_147_MOR.py         BaseTest.run() overridden by LoginTest.run()
+    │   │       └── Lab_148_MOR.py         Second overriding example
+    │   ├── 07_Abstraction/
+    │   │   ├── Lab_149_Abs.py             ABC + @abstractmethod - Animal base can't be instantiated
+    │   │   ├── Lab_150_Abs.py             Second abstract-class example
+    │   │   ├── Lab_151_REAL.py            Real-world abstraction shape
+    │   │   ├── Lab_152_REAL2.py           Real-world abstraction shape, variant
+    │   │   └── Lab_153_REAL_Browser.py    ExcelReader(ABC) -> Browser - multiple abstract methods, framework-style
+    │   ├── 08_Static/
+    │   │   ├── Lab_154_Static.py          Static class var - TestCounter.count shared across instances
+    │   │   ├── Lab_155.py                 Static var/method example
+    │   │   ├── Lab_156.py                 Static var/method example
+    │   │   ├── Lab_157_Non_Static.py      Contrast - instance (non-static) attribute behavior
+    │   │   ├── Lab_158_REAL_Exmaple.py    @staticmethod on ExcelReader / MYSQLDBConnection, called from TC1
+    │   │   └── Lab_159_Ex.py              Static method exercise
+    │   ├── 09_Exceptions/
+    │   │   ├── Lab_160.py                 NameError - undefined variable
+    │   │   ├── Lab_161.py..Lab_175.py     Built-in exceptions, try/except/else/finally, custom exception classes
+    │   │   └── Lab_176.py                 ExceptionGroup - bundling ValueError/TypeError/ZeroDivisionError
+    │   └── 10_Modules/
+    │       └── Lab_177_os.py              os module - os.name, getcwd(), listdir(), environ.get()
+    ├── ex_19_Package/                     Local module import vs a package with __init__.py
+    │   ├── mymodule.py                    Standalone module - greet(name) helper
+    │   ├── package/
+    │   │   ├── __init__.py                Empty - marks package/ as a package
+    │   │   ├── util_module.py             blah(name) - prints name
+    │   │   └── util_module2.py            blah(name) - prints name, second submodule
+    │   └── Lab_178.py                     import mymodule; from package import util_module, util_module2
     └── Task/
         ├── GradeCalculator.py             Score -> letter grade (A-F) from numeric ranges
         ├── PythonTask1.py                 Add/sub/mul/div, inline + via function returning a tuple
@@ -1229,7 +1266,7 @@ per file. Eighteen exercise sets plus a task folder, in order:
   access, `dict(zip(keys, values))` (extra keys silently dropped when the lists are uneven),
   `dict1 | dict2` merge, `.get(key, default)` — including the classic character-frequency counter
   built on `char_count.get(char, 0) + 1` — and dict equality ignoring key order.
-- **`ex_18_OOPs_Python/`** — object-oriented Python, one folder per pillar. Five folders built out:
+- **`ex_18_OOPs_Python/`** — object-oriented Python, one folder per pillar, all ten built out:
   - **`01_Class_Object/`** — `Lab120_Class.py` defines a `Person` class showing class attributes
     and all four method shapes (arg/no-arg × return/no-return) plus what `self` is for;
     `Lab121_Class_DOG.py` covers object vs. object reference (`chow = Dog()`), why a method body
@@ -1264,7 +1301,35 @@ per file. Eighteen exercise sets plus a task folder, in order:
     `BaseTest`), and **hybrid** (the diamond `Base → A, B → C`). `Lab_142_REAL.py` ties it back to
     real automation — a `BaseTest(browser)` constructor reused by both child test classes, which is
     exactly the `BaseTest`/page-object shape used in Chapter 02's Selenium framework.
-  - Folders `06_Polymorphism`, `07_Abstraction`, and `08_Static` are scaffolded for the next labs.
+  - **`06_Polymorphism/`** — Python has no true method overloading: redefining a method with the
+    same name just replaces the previous definition (`MethodOverloading/Lab_143_MO.py` through
+    `Lab_145_MO.py`), and `Lab_146_IQ.py` shows the usual workaround — a default arg
+    (`make_http_request(self, url, auth=None)`) so one method covers both call shapes. Method
+    **overriding** (`MethodOverrding/Lab_147_MOR.py`, `Lab_148_MOR.py`) is the real polymorphism
+    here: `LoginTest(BaseTest)` redefines `run()` and the subclass version wins.
+  - **`07_Abstraction/`** — `from abc import ABC, abstractmethod`. `Lab_149_Abs.py`/`Lab_150_Abs.py`
+    define an abstract `Animal` base that can't be instantiated directly; `Lab_151_REAL.py` and
+    `Lab_152_REAL2.py` build on that; `Lab_153_REAL_Browser.py` is the framework-shaped one —
+    `ExcelReader(ABC)` with an abstract `readFromExcel()`, then `Browser(ExcelReader)` adding its own
+    abstract `startBrowser()`/`stopBrowser()`, mirroring a real page-object base class.
+  - **`08_Static/`** — `Lab_154_Static.py`: a static class variable (`TestCounter.count`) shared
+    across every instance, incremented in `__init__`. `Lab_155.py`/`Lab_156.py` drill the same idea;
+    `Lab_157_Non_Static.py` contrasts it with plain instance attributes. `Lab_158_REAL_Exmaple.py` is
+    the framework-shaped one — `@staticmethod readExcelFile()` / `readMySQLFile()` called without an
+    instance, invoked from inside a `TC1.runTC()`. `Lab_159_Ex.py` is a static-method exercise.
+  - **`09_Exceptions/`** — `Lab_160.py` through `Lab_175.py` work through Python's built-in
+    exceptions (`NameError`, `ZeroDivisionError`, `TypeError`, `IndexError`, `KeyError`, …),
+    `try`/`except`/`else`/`finally`, and writing custom exception classes. `Lab_176.py` closes with
+    Python 3.11's `ExceptionGroup` — bundling a `ValueError`, `TypeError`, and `ZeroDivisionError`
+    into one raised group.
+  - **`10_Modules/`** — `Lab_177_os.py`: the `os` module — `os.name` (`nt` on Windows, `posix` on
+    Linux/Mac), `os.getcwd()`, `os.listdir()`, `os.environ.get("PATH")`.
+- **`ex_19_Package/`** — the difference between importing a lone module and importing a package.
+  `mymodule.py` is a standalone module (`greet(name)`); `package/` is a real package — an
+  `__init__.py` (empty, just marks the folder as a package) plus two submodules,
+  `util_module.py` and `util_module2.py`, both exposing a `blah(name)` function. `Lab_178.py` shows
+  both import styles side by side: `import mymodule` for the loose file, and
+  `from package import util_module, util_module2` for the package.
 - **`Task/`** — small capstone problems combining the above: `GradeCalculator.py` (score → letter
   grade), `PythonTask1.py`/`PythonTask2.py` (arithmetic + quotient/remainder, done twice — inline
   and via a function), `Sum_of_three_Numbers.py` (sum with default fallback values), and two
@@ -1342,6 +1407,12 @@ python ex_18_OOPs_Python/02_Constructor/Lab123_PC.py
 python ex_18_OOPs_Python/03_Instance_Variable/Lab128_Instance_Varaible.py
 python ex_18_OOPs_Python/04_Encapsulation/Lab133_Encap_Example.py
 python ex_18_OOPs_Python/05_Inheritance/Lab_138_03_MI_002.py
+python ex_18_OOPs_Python/06_Polymorphism/MethodOverrding/Lab_147_MOR.py
+python ex_18_OOPs_Python/07_Abstraction/Lab_153_REAL_Browser.py
+python ex_18_OOPs_Python/08_Static/Lab_154_Static.py
+python ex_18_OOPs_Python/09_Exceptions/Lab_176.py
+python ex_18_OOPs_Python/10_Modules/Lab_177_os.py
+python ex_19_Package/Lab_178.py
 python Task/GradeCalculator.py
 python Task/SET_First_NonRepeatingChar.py
 ```
