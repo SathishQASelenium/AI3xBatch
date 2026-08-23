@@ -163,6 +163,20 @@ mindmap
       ex_19 Package - local module import, package with __init__.py + multiple submodules
       Task - GradeCalculator, sum of two/three numbers, quotient-remainder
       Task - Set based non-repeating character problems
+      ex_20 Collections and File IO
+        collections module - namedtuple, deque, Counter, defaultdict
+        main entry-point pattern
+        os.path, open/read, with-context FileNotFoundError
+        python-dotenv, CSV via csv module and pandas
+      ex_21 PyTest
+        Custom markers - smoke, regression
+        Marker-filtered test runs
+        PyTest_Cheatsheet.md
+    Ch 12 - CrewAI
+      Groq-backed Agent/Task/Crew (OpenAI-compatible)
+      Test Analyst agent - feature to P0 test cases
+      Test Strategy Crew - Analyst, Tool Recommender, Writer
+      ISTQB-aligned strategy doc output
 ```
 
 ---
@@ -315,7 +329,7 @@ mindmap
 │       ├── pyproject.toml         fastmcp==2.14.7 pinned
 │       └── uv.lock
 │
-└── chapter_11_Python_Learning/    Core Python fundamentals - standalone lab scripts, no dependencies
+├── chapter_11_Python_Learning/    Core Python fundamentals - standalone lab scripts, no dependencies
     ├── ex_01_Python_Basics/
     │   ├── Lab001_Hello.py            print() basics, multiple args, mixed types
     │   ├── Lab002_Comment.py          Single-line comments
@@ -508,13 +522,36 @@ mindmap
     │   │   ├── util_module.py             blah(name) - prints name
     │   │   └── util_module2.py            blah(name) - prints name, second submodule
     │   └── Lab_178.py                     import mymodule; from package import util_module, util_module2
-    └── Task/
-        ├── GradeCalculator.py             Score -> letter grade (A-F) from numeric ranges
-        ├── PythonTask1.py                 Add/sub/mul/div, inline + via function returning a tuple
-        ├── PythonTask2.py                 Quotient/remainder via // and % vs divmod()
-        ├── Sum_of_three_Numbers.py        Sum of 3 inputs, default 100/200/300 if blank
-        ├── SET_First_NonRepeatingChar.py  First non-repeating char via str.count() + early return
-        └── SET_All_NonRepeatingChar.py    All non-repeating chars collected into a set
+    ├── Task/
+    │   ├── GradeCalculator.py             Score -> letter grade (A-F) from numeric ranges
+    │   ├── PythonTask1.py                 Add/sub/mul/div, inline + via function returning a tuple
+    │   ├── PythonTask2.py                 Quotient/remainder via // and % vs divmod()
+    │   ├── Sum_of_three_Numbers.py        Sum of 3 inputs, default 100/200/300 if blank
+    │   ├── SET_First_NonRepeatingChar.py  First non-repeating char via str.count() + early return
+    │   └── SET_All_NonRepeatingChar.py    All non-repeating chars collected into a set
+    ├── ex_20_Collections_FileIO/          collections module, os.path, file I/O, .env, CSV (csv + pandas)
+    │   ├── Lab_179.py                     collections module notes - namedtuple, deque, Counter, OrderedDict, defaultdict
+    │   ├── Lab_180_Main.py                if __name__ == '__main__' entry-point pattern
+    │   ├── Lab_181_Usage.py               Multiple functions, main() calling other module-level functions
+    │   ├── Lab_182_OS.py                  os.getcwd(), os.path.join(), open().read()
+    │   ├── Lab_183_File.py                Reading a text file via os.path.join() + open()
+    │   ├── Lab_184_Env.py                 python-dotenv - load_dotenv(), os.getenv(), .env-driven branching
+    │   ├── Lab_185.py                     with open(...) context manager + FileNotFoundError handling
+    │   ├── Lab_186.py                     csv.reader - skip header, print columns
+    │   ├── Lab_187.py                     pandas.read_csv() - DataFrame basics
+    │   ├── .env                           DB_PASSWORD sample var (gitignored)
+    │   ├── pramod.txt / testdata.txt      Sample text fixtures for the file-read labs
+    │   └── td.csv                         Sample CSV fixture for Lab_186/Lab_187
+    └── ex_21_PyTest/                      pytest fundamentals - markers, assertions, test discovery
+        ├── Lab_188.py                     Notes: ER == AR testing concept
+        ├── Lab_189_test.py                @pytest.mark.reg / @pytest.mark.smoke examples (one intentional failing assert)
+        ├── Lab_190_test.py                @pytest.mark.smoke / @pytest.mark.regression examples
+        └── PyTest_Cheatsheet.md           pytest marker/assertion/CLI quick reference
+
+└── chapter_12_CrewAI/             CrewAI multi-agent QA workflows on Groq (OpenAI-compatible)
+    ├── 01_test_analyst_Agent.py   Single Agent+Task+Crew: senior QA analyst drafts 5-10 P0 test cases from a feature description
+    ├── 02_test_strategy_agent.py  3-agent sequential Crew: Strategy Analyst -> Tool Recommender -> Strategy Writer produce an ISTQB-aligned test strategy doc
+    └── .env                       GROQ_API_KEY, GROQ_MODEL, GROQ_BASE_URL (gitignored)
 ```
 
 ---
@@ -1210,7 +1247,7 @@ Register with Claude Desktop via the `claude_desktop_config.json` snippet in
 
 `chapter_11_Python_Learning/` steps back from the AI-agent chapters to cover core Python
 fundamentals as standalone, runnable lab scripts — no frameworks, no dependencies, one concept
-per file. Eighteen exercise sets plus a task folder, in order:
+per file. Twenty-one exercise sets plus a task folder, in order:
 
 - **`ex_01_Python_Basics/`** — `print()`, comments, running a `.py` file.
 - **`ex_02_Keywords_Identifier_Variables/`** — identifier rules, keywords, dynamic typing,
@@ -1336,6 +1373,18 @@ per file. Eighteen exercise sets plus a task folder, in order:
   set-based string problems — `SET_First_NonRepeatingChar.py` (first non-repeating character, via
   `string.count(char) == 1` with an early `return`) and `SET_All_NonRepeatingChar.py` (all of
   them, collected into a set).
+- **`ex_20_Collections_FileIO/`** — the `collections` module (`Lab_179.py` notes:
+  `namedtuple`/`deque`/`Counter`/`OrderedDict`/`defaultdict`), the `if __name__ == '__main__'`
+  entry-point pattern (`Lab_180_Main.py`, `Lab_181_Usage.py`), then file I/O end to end:
+  `os.getcwd()`/`os.path.join()` (`Lab_182_OS.py`, `Lab_183_File.py`), a `with open(...)` context
+  manager with `FileNotFoundError` handling (`Lab_185.py`), `python-dotenv` reading a `.env`
+  (`Lab_184_Env.py`), and CSV reading two ways — stdlib `csv.reader` (`Lab_186.py`) vs.
+  `pandas.read_csv()` (`Lab_187.py`) — both against the same `td.csv` fixture.
+- **`ex_21_PyTest/`** — pytest fundamentals: custom markers (`@pytest.mark.smoke`,
+  `@pytest.mark.regression`) across `Lab_189_test.py`/`Lab_190_test.py`, one intentionally failing
+  assert to show pytest's failure output, and `PyTest_Cheatsheet.md` as the marker/assertion/CLI
+  quick reference. Needs `pip install pytest`; run with `pytest -m smoke` / `pytest -m regression`
+  to filter by marker.
 
 **Why a QA engineer should care:** these labs underpin every other chapter's automation code —
 `ConfigReader.java`-style dynamic config reading, CSV/JSON parsing in the RAG and MCP chapters,
@@ -1415,6 +1464,9 @@ python ex_18_OOPs_Python/10_Modules/Lab_177_os.py
 python ex_19_Package/Lab_178.py
 python Task/GradeCalculator.py
 python Task/SET_First_NonRepeatingChar.py
+python ex_20_Collections_FileIO/Lab_186.py
+python ex_20_Collections_FileIO/Lab_187.py
+pytest ex_21_PyTest/ -m smoke
 ```
 
 Each `LabNNN_*.py` is self-contained — run any one file directly, no setup beyond a Python 3
@@ -1426,7 +1478,46 @@ VWO_USERNAME=your_email@example.com
 VWO_PASSWORD=your_password
 ```
 
-Every other lab is stdlib only.
+Every other lab is stdlib only. `ex_20_Collections_FileIO/Lab_187.py` needs `pip install pandas`;
+`ex_21_PyTest/` needs `pip install pytest`.
+
+---
+
+## Chapter 12 — CrewAI
+
+`chapter_12_CrewAI/` builds QA-focused multi-agent workflows with [CrewAI](https://www.crewai.com/),
+wired to Groq's OpenAI-compatible API (`openai/` provider prefix + a Groq `base_url`) instead of
+OpenAI directly — same `Agent`/`Task`/`Crew` API, no OpenAI key needed.
+
+- **`01_test_analyst_Agent.py`** — single-agent Crew: one `Agent` (a senior QA with a 15-year JIRA
+  backstory), one `Task` (analyze a feature description and produce 5-10 P0 test cases), one
+  `Crew`, `kickoff()`. The minimal Step 0-4 shape (brain → agent → task → crew → kickoff) every
+  later multi-agent Crew here builds on.
+- **`02_test_strategy_agent.py`** — 3-agent sequential Crew that turns project metadata into a full
+  ISTQB-aligned test strategy document:
+  1. **Strategy Analyst** — scope, risk areas, quality gates from tech stack/team/timeline.
+  2. **Tool Recommender** — tool suggestions based on the analyst's output.
+  3. **Strategy Writer** — assembles the final strategy doc, written to `output_file=` and also
+     copied to a timestamped `test_strategy_<YYYYMMDDHHMMSS>.md` at the working directory.
+
+**Run:**
+```bash
+cd chapter_12_CrewAI
+python 01_test_analyst_Agent.py
+python 02_test_strategy_agent.py
+```
+
+**Env** (`.env` in `chapter_12_CrewAI/`, gitignored):
+```
+GROQ_API_KEY=
+GROQ_MODEL=openai/gpt-oss-120b   # exact model ID from the Groq console
+GROQ_BASE_URL=https://api.groq.com/openai/v1
+```
+
+> **Gotcha:** run `02_test_strategy_agent.py` from the repo root instead of from inside
+> `chapter_12_CrewAI/` and the timestamped `test_strategy_*.md` copy lands in the repo root, not
+> the chapter folder — always `cd chapter_12_CrewAI` first, or clean up stray root-level
+> `test_strategy_*.md` files before committing.
 
 ---
 
@@ -1455,6 +1546,9 @@ You can read it linearly (chapter 01 → 04) or jump straight to a project:
 - **"I want to (re)learn core Python before touching the automation code."** → `chapter_11_Python_Learning/`.
 - **"I want Python OOP (classes, `self`, constructors) before writing page objects."** → `chapter_11_Python_Learning/ex_18_OOPs_Python/`.
 - **"I want to understand why my two mixins fight over the same method."** → `chapter_11_Python_Learning/ex_18_OOPs_Python/05_Inheritance/Lab_138_03_MI_002.py` (MRO).
+- **"I want CSV/file I/O and `.env` patterns before touching the automation code."** → `chapter_11_Python_Learning/ex_20_Collections_FileIO/`.
+- **"I want pytest markers before writing real test suites."** → `chapter_11_Python_Learning/ex_21_PyTest/`.
+- **"I want a multi-agent Crew that writes test cases or a full test strategy doc."** → `chapter_12_CrewAI/`.
 
 ## Requirements
 
@@ -1470,7 +1564,8 @@ You can read it linearly (chapter 01 → 04) or jump straight to a project:
 - For Chapter 8 QABuddy.ai: **Python 3.13** (`uv venv` recommended), `pip install -r chapter_08_QABuddyAI/requirements.txt`, a `GROQ_API_KEY`, and `git` to clone the two framework repos via `scripts/fetch_repos.sh`. No Docker/Qdrant server needed locally — Docker Compose is only for the droplet deploy path.
 - For Job Tracker AI: **Node.js 20.19+ or 22.12+** and npm for Vite 8.
 - For Chapter 10 MCP server: **Python 3.11+** and **uv** (`uv sync` installs `fastmcp==2.14.7`). No API keys needed — the server only reads the local CSV.
-- For Chapter 11 Python Learning: **Python 3.x** only, no packages — `python <lab_file>.py` runs any lab directly. Single exception: `ex_18_OOPs_Python/04_Encapsulation/Lab131_Encap_NICE.py` needs `pip install python-dotenv` plus a local `.env` (`VWO_USERNAME`, `VWO_PASSWORD`) — gitignored, so create your own.
+- For Chapter 11 Python Learning: **Python 3.x** only, no packages — `python <lab_file>.py` runs any lab directly. Exceptions: `ex_18_OOPs_Python/04_Encapsulation/Lab131_Encap_NICE.py` needs `pip install python-dotenv` plus a local `.env` (`VWO_USERNAME`, `VWO_PASSWORD`); `ex_20_Collections_FileIO/Lab_184_Env.py` needs `python-dotenv` plus its own `.env` (`DB_PASSWORD`); `Lab_187.py` needs `pip install pandas`; `ex_21_PyTest/` needs `pip install pytest` — all gitignored/optional, install only what you're running.
+- For Chapter 12 CrewAI: **Python 3.10+**, `pip install crewai python-dotenv`, and a `GROQ_API_KEY` (Groq's OpenAI-compatible endpoint — no OpenAI key needed) in a local `.env` under `chapter_12_CrewAI/`.
 
 ## Chapter History
 
