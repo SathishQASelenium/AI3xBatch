@@ -33,3 +33,7 @@ env
 # Local browser verification artifacts
 .playwright-mcp/
 .playwright-cli/
+
+# CrewAI timestamped strategy outputs (regenerable; sample kept as chapter_12_CrewAI/test_strategy_output.md)
+test_strategy_2*.md
+chapter_12_CrewAI/test_strategy_2*.md

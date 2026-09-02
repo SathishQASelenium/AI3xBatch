@@ -1,6 +1,6 @@
 class Utility:
 
-    @staticmethod
+    @staticmethod # To make this method static, we use the @staticmethod decorator
     def greet_course_name(name):
         print("Hi,", name)
 

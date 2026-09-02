@@ -177,6 +177,7 @@ mindmap
       Test Analyst agent - feature to P0 test cases
       Test Strategy Crew - Analyst, Tool Recommender, Writer
       ISTQB-aligned strategy doc output
+      Hardened - fail-fast env, Pydantic-validated output, behaviour-based personas
 ```
 
 ---
@@ -1500,6 +1501,30 @@ OpenAI directly — same `Agent`/`Task`/`Crew` API, no OpenAI key needed.
   3. **Strategy Writer** — assembles the final strategy doc, written to `output_file=` and also
      copied to a timestamped `test_strategy_<YYYYMMDDHHMMSS>.md` at the working directory.
 
+**Hardening applied to `02_test_strategy_agent.py`** (post-review — each one is a course lesson
+applied to the course's own code):
+
+- **Fail-fast env validation** — `GROQ_MODEL` / `GROQ_API_KEY` / `GROQ_BASE_URL` checked right
+  after `load_dotenv()`; a missing variable raises a named `EnvironmentError` instead of the
+  literal model string `openai/None` failing deep inside the LLM call.
+- **`kickoff()` error handling** — Groq's free tier rate-limits regularly; on failure the script
+  prints likely causes and echoes back all six user answers so nothing is lost on retry.
+- **Behaviour-based backstories** — invented seniority ("18+ years, 200+ projects") replaced with
+  the behaviour it was standing in for: state assumptions explicitly, flag what the input doesn't
+  cover, don't invent detail. RICE-POT's Parameters + Tone applied to agent personas.
+- **Validated structured output** — the analyst task uses `output_pydantic` with a
+  `ProjectAnalysis` schema (typed risk list with severity + mitigation), so a malformed response
+  fails loudly instead of flowing downstream as unchecked text.
+- **Explicit task dependencies** — `context=[...]` on tasks 2 and 3 makes the sequential data flow
+  visible in code and reorder-safe.
+- **`temperature=0`** — repo convention for reproducible generation.
+- **Prompt-injection fencing** — free-text `additional_context` is labelled as project data, never
+  instructions (same trust-boundary problem as text arriving in a Jira ticket).
+- **Windows UTF-8 console fix** — stdout/stderr reconfigured to UTF-8; cp1252 consoles otherwise
+  crash on Unicode in LLM output *after* the crew has already finished.
+
+Sample generated output is committed at `chapter_12_CrewAI/test_strategy_output.md`.
+
 **Run:**
 ```bash
 cd chapter_12_CrewAI
@@ -1565,7 +1590,7 @@ You can read it linearly (chapter 01 → 04) or jump straight to a project:
 - For Job Tracker AI: **Node.js 20.19+ or 22.12+** and npm for Vite 8.
 - For Chapter 10 MCP server: **Python 3.11+** and **uv** (`uv sync` installs `fastmcp==2.14.7`). No API keys needed — the server only reads the local CSV.
 - For Chapter 11 Python Learning: **Python 3.x** only, no packages — `python <lab_file>.py` runs any lab directly. Exceptions: `ex_18_OOPs_Python/04_Encapsulation/Lab131_Encap_NICE.py` needs `pip install python-dotenv` plus a local `.env` (`VWO_USERNAME`, `VWO_PASSWORD`); `ex_20_Collections_FileIO/Lab_184_Env.py` needs `python-dotenv` plus its own `.env` (`DB_PASSWORD`); `Lab_187.py` needs `pip install pandas`; `ex_21_PyTest/` needs `pip install pytest` — all gitignored/optional, install only what you're running.
-- For Chapter 12 CrewAI: **Python 3.10+**, `pip install crewai python-dotenv`, and a `GROQ_API_KEY` (Groq's OpenAI-compatible endpoint — no OpenAI key needed) in a local `.env` under `chapter_12_CrewAI/`.
+- For Chapter 12 CrewAI: **Python 3.10+**, `pip install crewai python-dotenv`, and a `GROQ_API_KEY` (Groq's OpenAI-compatible endpoint — no OpenAI key needed) in a local `.env` under `chapter_12_CrewAI/`. On **Python 3.14** also `pip install -U chromadb` (≥1.5) — the chromadb ~1.1 that crewai pins uses pydantic v1 internals that break on 3.14.
 
 ## Chapter History
 

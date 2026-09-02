@@ -75,7 +75,7 @@ GEMINI_API_KEY=
 ### Prompt Engineering (RICE-POT / BLAST)
 - All prompts include `ANTI_HALLUCINATION` block: model must report "Insufficient information" for unknowns rather than invent
 - Pin `temperature=0` for reproducible test case generation
-- RICE-POT structure: Role, Instructions, Context, Examples, Persona, Output format, Task
+- RICE-POT structure: Role, Instructions, Context, Example, Parameters, Output, Tone
 - BLAST coverage: Boundary, Logic, Action, State, Timing
 
 ## Key Gotchas
