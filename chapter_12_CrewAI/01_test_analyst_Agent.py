@@ -1,4 +1,4 @@
-# Test Ananlyst Agent
+# Test Analyst Agent
 # 
 # a senior QA with 15 years (JIRA MD)
 #  of experience. Based on the feature, 
@@ -26,7 +26,7 @@ import os
 # We need use the GROQ gpt-oss-120b model
 
 
-# Step 0 - Set up the Brain (Groq LLM)
+# Step 0. Set up the Brain (Groq LLM)
 load_dotenv()  # reads the .env file in this folder
 
 # Groq exposes an OpenAI-compatible API, so we use the "openai/" provider
@@ -44,7 +44,7 @@ qa_agent = Agent(
     goal="Analyse the feature or the requirements, and create 5-10 test cases out of it.",
     backstory="You are a senior QA engineer with 15 years of experience in test planning and testcases creation",
     llm = groq_llm,
-    verbose=True
+    verbose=True # Want to print all the intermediate steps and reasoning of the agent
 )
 
 # Step 2. Give the Task to the Agent
@@ -58,10 +58,14 @@ test_case_task = Task(
 crew = Crew(
     agents=[qa_agent],
     tasks=[test_case_task],
-    verbose=True
+    verbose=True # Want to print all the intermediate steps and reasoning of the agent
 )
 
 # Step 4. kick Off Agent
 if __name__ == "__main__":
     result = crew.kickoff()
     print(result)
+
+# How to execute this script?
+# we must use the command line and run the following command:
+# python chapter_12_CrewAI/01_test_analyst_Agent.py

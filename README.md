@@ -178,6 +178,31 @@ mindmap
       Test Strategy Crew - Analyst, Tool Recommender, Writer
       ISTQB-aligned strategy doc output
       Hardened - fail-fast env, Pydantic-validated output, behaviour-based personas
+      Research + Writer 2-agent crew
+      Bug Triage Crew - Triage, RCA, Test Strategy
+      Prod triage crew - live Jira REST, per-agent token budgets, OpenRouter failover
+      4-stage Jira MCP pipeline - plan, cases, Playwright
+    Ch 13 - Jira QA Crew Pipeline
+      Streamlit app over a 4-agent CrewAI pipeline
+      Jira Gateway - MCP primary, REST fallback
+      Pydantic contracts between stages
+      Deterministic renderers - MD/CSV/JSON/TS/ZIP
+      Computed traceability + coverage
+      Structured-output ladder + one repair attempt
+      268 pytest tests, ruff, Docker, Streamlit Cloud
+    Ch 14 - LLM Evaluation
+      Why traditional QA breaks on LLMs
+      Golden dataset, ground truth, judge
+      Hallucination, faithfulness, relevancy
+      Context precision/recall, traces and spans
+    Ch 16 - E2E QA Pipeline design
+      JQL to Jira stories
+      RAG-backed test plan + test cases
+      Test cases to Playwright flow MD
+      Browser Bash execution to result.json
+      Flakiness + RCA analysis to dashboard
+    learnings/
+      Dated post-mortems from building the chapters
 ```
 
 ---
@@ -537,22 +562,66 @@ mindmap
     │   ├── Lab_182_OS.py                  os.getcwd(), os.path.join(), open().read()
     │   ├── Lab_183_File.py                Reading a text file via os.path.join() + open()
     │   ├── Lab_184_Env.py                 python-dotenv - load_dotenv(), os.getenv(), .env-driven branching
-    │   ├── Lab_185.py                     with open(...) context manager + FileNotFoundError handling
-    │   ├── Lab_186.py                     csv.reader - skip header, print columns
-    │   ├── Lab_187.py                     pandas.read_csv() - DataFrame basics
+    │   ├── Lab_185_TryCatch_File.py       with open(...) context manager + FileNotFoundError handling
+    │   ├── Lab_186_ReadCSV.py             csv.reader - skip header, print columns
+    │   ├── Lab_187_PandaCSV.py            pandas.read_csv() - DataFrame basics
     │   ├── .env                           DB_PASSWORD sample var (gitignored)
     │   ├── pramod.txt / testdata.txt      Sample text fixtures for the file-read labs
-    │   └── td.csv                         Sample CSV fixture for Lab_186/Lab_187
+    │   └── td.csv                         Sample CSV fixture for Lab_186_ReadCSV/Lab_187_PandaCSV
     └── ex_21_PyTest/                      pytest fundamentals - markers, assertions, test discovery
         ├── Lab_188.py                     Notes: ER == AR testing concept
         ├── Lab_189_test.py                @pytest.mark.reg / @pytest.mark.smoke examples (one intentional failing assert)
         ├── Lab_190_test.py                @pytest.mark.smoke / @pytest.mark.regression examples
         └── PyTest_Cheatsheet.md           pytest marker/assertion/CLI quick reference
 
-└── chapter_12_CrewAI/             CrewAI multi-agent QA workflows on Groq (OpenAI-compatible)
-    ├── 01_test_analyst_Agent.py   Single Agent+Task+Crew: senior QA analyst drafts 5-10 P0 test cases from a feature description
-    ├── 02_test_strategy_agent.py  3-agent sequential Crew: Strategy Analyst -> Tool Recommender -> Strategy Writer produce an ISTQB-aligned test strategy doc
-    └── .env                       GROQ_API_KEY, GROQ_MODEL, GROQ_BASE_URL (gitignored)
+├── chapter_12_CrewAI/             CrewAI multi-agent QA workflows on Groq (OpenAI-compatible)
+│   ├── 01_test_analyst_Agent.py   Single Agent+Task+Crew: senior QA analyst drafts 5-10 P0 test cases from a feature description
+│   ├── 02_Research_Write_AI_Agent.py  2-agent Crew: QA Research Analyst -> QA Documentation Writer (bug patterns -> prevention guidelines)
+│   ├── 02_test_strategy_agent.py  3-agent sequential Crew: Strategy Analyst -> Tool Recommender -> Strategy Writer produce an ISTQB-aligned test strategy doc
+│   ├── 03_Build_QABugTriageCrew.py     Teaching draft of the Bug Triage Crew - the business case and a sample bug report, mostly commented
+│   ├── 04_Build_QABugTriageCrew_Prod.py   Production triage crew: live Jira REST fetch, ADF -> text, per-agent max_tokens budgets, empty-completion retry, OpenRouter failover
+│   ├── 05_QAPipeline_TP_TC_TW_PW.py    4-agent Jira MCP pipeline: Analyst -> Test Plan -> Test Cases -> Playwright Coder, writes output/*.md
+│   ├── Bug_cache.txt              Cached VWO-48 ticket - offline fallback when Jira is unreachable
+│   ├── Crew_AI_Pipeline_Prompt.md Short build spec for the 4-agent pipeline
+│   ├── Final_QA_Pipeline.md       RICE-POT master build prompt that generated chapter 13
+│   ├── test_strategy_output.md    Sample ISTQB strategy doc from 02_test_strategy_agent.py
+│   └── .env                       GROQ_API_KEY, GROQ_MODEL, GROQ_BASE_URL, JIRA_* (gitignored)
+│
+├── chapter_13_CREW_AI_QA_Pipeline/   Jira QA Crew - Streamlit app over a 4-agent CrewAI pipeline
+│   ├── README.md                  Full setup, architecture decisions, troubleshooting, limitations
+│   ├── app.py                     Streamlit entry point (presentation only)
+│   ├── src/jira_qa_crew/
+│   │   ├── config.py              Settings, readiness report, secret redaction
+│   │   ├── models.py              Pydantic contracts between stages
+│   │   ├── jira/                  ADF parser, provider interface, MCP + REST providers, MCP->REST gateway
+│   │   ├── tools/jira_tool.py     Read-only, scope-limited agent tool
+│   │   ├── crew/                  agents, tasks, per-ticket crew factory, progress callbacks
+│   │   ├── prompts/               agents.yaml + tasks.yaml (prompts out of code)
+│   │   ├── services/              pipeline, handoff, structured-output ladder, validation, traceability, artifacts
+│   │   └── ui/                    Streamlit state, components, results
+│   ├── tests/                     268 pytest tests, no live Jira or LLM
+│   ├── fixtures/                  VWO-48 / VWO-49 demo tickets (DEMO_MODE)
+│   ├── tools/playwright-check/    TypeScript harness that compiles generated specs
+│   ├── scripts/                   demo_smoke.py, check_playwright.py
+│   ├── outputs/                   Generated RUN-<timestamp>/<TICKET>/ artifact sets
+│   ├── requirements.txt           Pinned for Python 3.11/3.13
+│   ├── requirements-py314.txt     Verified uv-based workaround for Python 3.14 only
+│   └── Dockerfile · docker-compose.yml
+│
+├── chapter_14_LLM_Eval/           Evaluating LLM-powered systems
+│   └── README.md                  Why traditional QA breaks + the eval vocabulary
+│
+├── chapter_16_E2E_QA_Pipeline/    Design doc for the full JQL -> dashboard loop
+│   └── E2E_QA_Pipeline.md         8-step flow: JQL, RAG test plan/cases, Playwright MD, Browser Bash, RCA
+│
+└── learnings/                     Dated build post-mortems (problem -> approach -> what to reuse)
+    ├── 2026-07-11-langflow-docker-volume-db-persistence.md
+    ├── 2026-07-12-flagembedding-reranker-bypass.md
+    ├── 2026-07-18-qabuddy-multisource-rag.md
+    ├── 2026-07-25-verify-library-api-before-writing-against-it.md
+    ├── 2026-08-10-document-only-what-exists.md
+    ├── 2026-08-29-crewai-provider-structured-output.md
+    └── 2026-08-29-crewai-sequential-token-squeeze.md
 ```
 
 ---
@@ -1378,9 +1447,10 @@ per file. Twenty-one exercise sets plus a task folder, in order:
   `namedtuple`/`deque`/`Counter`/`OrderedDict`/`defaultdict`), the `if __name__ == '__main__'`
   entry-point pattern (`Lab_180_Main.py`, `Lab_181_Usage.py`), then file I/O end to end:
   `os.getcwd()`/`os.path.join()` (`Lab_182_OS.py`, `Lab_183_File.py`), a `with open(...)` context
-  manager with `FileNotFoundError` handling (`Lab_185.py`), `python-dotenv` reading a `.env`
-  (`Lab_184_Env.py`), and CSV reading two ways — stdlib `csv.reader` (`Lab_186.py`) vs.
-  `pandas.read_csv()` (`Lab_187.py`) — both against the same `td.csv` fixture.
+  manager with `FileNotFoundError` handling (`Lab_185_TryCatch_File.py`), `python-dotenv` reading a
+  `.env` (`Lab_184_Env.py`), and CSV reading two ways — stdlib `csv.reader`
+  (`Lab_186_ReadCSV.py`) vs. `pandas.read_csv()` (`Lab_187_PandaCSV.py`) — both against the same
+  `td.csv` fixture.
 - **`ex_21_PyTest/`** — pytest fundamentals: custom markers (`@pytest.mark.smoke`,
   `@pytest.mark.regression`) across `Lab_189_test.py`/`Lab_190_test.py`, one intentionally failing
   assert to show pytest's failure output, and `PyTest_Cheatsheet.md` as the marker/assertion/CLI
@@ -1465,8 +1535,8 @@ python ex_18_OOPs_Python/10_Modules/Lab_177_os.py
 python ex_19_Package/Lab_178.py
 python Task/GradeCalculator.py
 python Task/SET_First_NonRepeatingChar.py
-python ex_20_Collections_FileIO/Lab_186.py
-python ex_20_Collections_FileIO/Lab_187.py
+python ex_20_Collections_FileIO/Lab_186_ReadCSV.py
+python ex_20_Collections_FileIO/Lab_187_PandaCSV.py
 pytest ex_21_PyTest/ -m smoke
 ```
 
@@ -1479,7 +1549,8 @@ VWO_USERNAME=your_email@example.com
 VWO_PASSWORD=your_password
 ```
 
-Every other lab is stdlib only. `ex_20_Collections_FileIO/Lab_187.py` needs `pip install pandas`;
+Every other lab is stdlib only. `ex_20_Collections_FileIO/Lab_187_PandaCSV.py` needs
+`pip install pandas`;
 `ex_21_PyTest/` needs `pip install pytest`.
 
 ---
@@ -1494,6 +1565,10 @@ OpenAI directly — same `Agent`/`Task`/`Crew` API, no OpenAI key needed.
   backstory), one `Task` (analyze a feature description and produce 5-10 P0 test cases), one
   `Crew`, `kickoff()`. The minimal Step 0-4 shape (brain → agent → task → crew → kickoff) every
   later multi-agent Crew here builds on.
+- **`02_Research_Write_AI_Agent.py`** — the smallest multi-agent shape: a **QA Research Analyst**
+  finds common web-application bug patterns, a **QA Documentation Writer** turns them into
+  prevention guidelines. Two agents, two tasks, one sequential Crew — the step between the
+  single-agent script above and the bigger crews below.
 - **`02_test_strategy_agent.py`** — 3-agent sequential Crew that turns project metadata into a full
   ISTQB-aligned test strategy document:
   1. **Strategy Analyst** — scope, risk areas, quality gates from tech stack/team/timeline.
@@ -1525,11 +1600,50 @@ applied to the course's own code):
 
 Sample generated output is committed at `chapter_12_CrewAI/test_strategy_output.md`.
 
+### Bug Triage Crew — draft, then production
+
+- **`03_Build_QABugTriageCrew.py`** — the teaching draft. Mostly commented-out: the business case
+  for automating triage (30 people × 30 min × 20 days ≈ 300 wasted hours/month) and a sample bug
+  report to work from. Read this before the production file so the finished version's complexity
+  has a reason.
+- **`04_Build_QABugTriageCrew_Prod.py`** — the production version of the same crew. Three
+  specialists run sequentially: **Bug Triage Analyst** (severity/priority/category) →
+  **Root Cause Investigator** (RCA, `context=` task 1) → **Test Strategy Advisor** (regression plan,
+  `context=` tasks 1+2). What makes it production rather than a demo:
+  - **Live Jira input** — fetches the ticket over Jira REST v3 and converts ADF (Atlassian Document
+    Format) to plain text. `Bug_cache.txt` is the offline fallback when Jira is unreachable.
+  - **Per-agent token budgets** — Groq's free tier bills prompt + `max_tokens` against one TPM
+    budget, and in a sequential crew each agent's prompt carries the previous outputs. Every agent
+    gets its own `LLM` with a `max_tokens` sized for its position in the chain. Without this the
+    last agent's report stops mid-sentence — the failure is written up in
+    `learnings/2026-08-29-crewai-sequential-token-squeeze.md`.
+  - **Empty-completion retry + OpenRouter failover** — a `FallbackLLM` wrapper detects empty
+    responses and switches provider (`LLM_PROVIDER=groq|openrouter`).
+  - **Every stage printed** — `crew.kickoff()` only returns the *last* task's output, so the script
+    walks `result.tasks_output` to print all three reports.
+
+- **`05_QAPipeline_TP_TC_TW_PW.py`** — 4-agent pipeline, Jira ticket in, QA artifacts out:
+  **Jira Analyst** (fetches the ticket through the `mcp-atlassian` MCP server over stdio) →
+  **Test Plan Writer** (12-section plan) → **Test Case Writer** (test-case table) →
+  **Playwright Coder** (TypeScript specs). Writes `output/test_plan.md`, `output/test_cases.md`,
+  and `output/playwright_tests.md`. Two details worth copying:
+  - `create_static_tool_filter(allowed_tool_names=["jira_get_issue", "jira_search"])` — the MCP
+    server exposes ~49 tools, and every tool schema lands in the system prompt. Unfiltered, that
+    alone blows the 8000 TPM free-tier budget.
+  - MCP credentials are passed to the subprocess's `env`, never into a prompt.
+
+`Crew_AI_Pipeline_Prompt.md` is the short spec for that pipeline. `Final_QA_Pipeline.md` is the
+full RICE-POT master build prompt that generated **Chapter 13** — read it as the worked example of
+prompting a whole application into existence rather than a single script.
+
 **Run:**
 ```bash
 cd chapter_12_CrewAI
 python 01_test_analyst_Agent.py
+python 02_Research_Write_AI_Agent.py
 python 02_test_strategy_agent.py
+python 04_Build_QABugTriageCrew_Prod.py     # BUG_ID=VWO-48 by default
+python 05_QAPipeline_TP_TC_TW_PW.py         # needs uvx + mcp-atlassian
 ```
 
 **Env** (`.env` in `chapter_12_CrewAI/`, gitignored):
@@ -1537,6 +1651,18 @@ python 02_test_strategy_agent.py
 GROQ_API_KEY=
 GROQ_MODEL=openai/gpt-oss-120b   # exact model ID from the Groq console
 GROQ_BASE_URL=https://api.groq.com/openai/v1
+
+# 04 + 05 only — live Jira
+JIRA_BASE_URL=https://<domain>.atlassian.net
+JIRA_URL=https://<domain>.atlassian.net    # 05 / mcp-atlassian
+JIRA_EMAIL=
+JIRA_API_TOKEN=
+BUG_ID=VWO-48
+
+# 04 only — optional failover provider
+LLM_PROVIDER=groq                # groq | openrouter
+OPENROUTER_API_KEY=
+OPENROUTER_MODEL=deepseek/deepseek-chat
 ```
 
 > **Gotcha:** run `02_test_strategy_agent.py` from the repo root instead of from inside
@@ -1546,9 +1672,170 @@ GROQ_BASE_URL=https://api.groq.com/openai/v1
 
 ---
 
+## Chapter 13 — Jira QA Crew (production CrewAI pipeline)
+
+`chapter_13_CREW_AI_QA_Pipeline/` is where Chapter 12's scripts become an application. Paste one or
+more Jira ticket IDs into a Streamlit UI and get back a requirements analysis, a 12-section test
+plan, detailed test cases, Playwright TypeScript specs, a traceability matrix, and a downloadable
+ZIP. The engine is a real four-agent CrewAI pipeline — nothing is simulated and no agent response is
+hard-coded. It was generated from `chapter_12_CrewAI/Final_QA_Pipeline.md`.
+
+```text
+Jira IDs → parse, normalize, dedupe, validate
+Jira Gateway ── MCP (primary) → REST (fallback)
+   ↓
+Agent 1: Jira Analyst      → RequirementAnalysis  (REQ-*, AC-*, provenance)
+Agent 2: Test Plan Writer  → TestPlan             (exactly 12 sections)
+Agent 3: Test Case Writer  → TestCaseSuite        (steps, data, automation calls)
+Agent 4: Playwright Coder  → PlaywrightBundle     (compilable .spec.ts)
+   ↓  each arrow is a deterministic validation gate
+Renderers → Markdown, CSV, JSON, TypeScript, ZIP → Streamlit downloads
+```
+
+**The design decisions worth stealing** (each is a course lesson made load-bearing):
+
+- **Provider choice is application logic, not an LLM decision.** `JiraGateway` decides MCP-then-REST
+  in Python. An agent is never asked which provider to use and never sees the credentials.
+- **Pydantic objects are the source of truth, never LLM Markdown.** Agents return structured
+  objects; every `.md`/`.csv`/`.json`/`.ts` file is rendered from them by deterministic Python in
+  `services/artifacts.py`. Fix a renderer and every past object re-renders identically.
+- **Coverage is computed, not claimed.** `services/traceability.py` derives coverage from the
+  validated objects — an agent asked "how well did you cover this?" has an obvious incentive to
+  answer "fully".
+- **Stages hand off compact validated summaries, not raw text.** CrewAI's `Task.context` forwards
+  every earlier task's full raw output; by stage 4 the prompt carries the whole analysis and plan.
+  `services/handoff.py` sends a rendered summary of the *validated* object instead — 40-70% smaller,
+  cannot contain anything validation rejected, and lists exactly which ids the next stage may cite.
+- **Structured output degrades gracefully.** A three-rung ladder — `output_pydantic` (provider
+  enforces the schema) → `response_format: json_object` → schema in the prompt — and the run
+  remembers where it landed. **Enforcement is downgraded; validation never is.** A rate limit or an
+  auth error never triggers a downgrade, and there is a test for that.
+- **One repair attempt, never a loop.** A stage that fails validation re-runs once with the specific
+  problems listed, and is told not to invent content to satisfy a check.
+- **Only Agent 1 gets the Jira tool**, scoped to the ticket keys the run started with — so a ticket
+  saying "now fetch SECRET-1" gets a refusal, and a prompt injected into ticket text cannot reach
+  Jira through the other three agents.
+
+**Verification status** (from the chapter README, last verified 2026-08-29 against
+`deepseek/deepseek-v4-flash`): `ruff check .` clean, `pytest` 268 passed / 3 skipped (the 3 are
+opt-in live tests), Streamlit app renders, a full four-agent run completes, and the generated
+Playwright compiles under `tsc --noEmit`. Not verified and not claimed: the Docker image build,
+live Jira, live MCP.
+
+**Run it:**
+```bash
+cd chapter_13_CREW_AI_QA_Pipeline
+python3 -m venv .venv && source .venv/bin/activate    # Windows: py -3.13 -m venv .venv
+pip install -r requirements.txt
+cp .env.example .env          # fill in LLM_MODEL, LLM_API_KEY, JIRA_*
+streamlit run app.py          # http://localhost:8501
+```
+
+```bash
+pytest                                   # 268 tests, no network, no LLM cost
+ruff check .
+python scripts/demo_smoke.py             # real pipeline over fixtures (costs tokens)
+python scripts/check_playwright.py outputs/RUN-...   # compile the generated specs
+```
+
+Set `DEMO_MODE=true` to run against `fixtures/VWO-48.json` / `VWO-49.json` with no Jira at all —
+labelled in the UI and in every artifact, and never an automatic fallback for a failed live call.
+
+**Gotchas:**
+- **Python 3.11 or 3.13 — not 3.14.** `crewai` declares `Requires-Python >=3.10,<3.14` and pip
+  enforces that before it looks at versions, so pinning doesn't help. `requirements-py314.txt` has a
+  verified `uv`-based workaround, but it is a repaired install rather than a clean resolve.
+- **Restart Streamlit after editing anything in `prompts/`** — the YAML loader is `lru_cache`d, so
+  auto-rerun keeps serving the prompt already in memory.
+- **Expect 3-6 minutes per ticket.** Four sequential LLM stages plus any retry; the latency is the
+  provider's.
+- **Generated Playwright is usually `NEEDS_CONFIGURATION`.** A ticket rarely contains real selectors
+  or routes, so the coder emits marked placeholders and says what it needs. That is the honest
+  outcome, not a defect.
+
+Full setup, MCP tool-name configuration, security notes, deployment (Streamlit Community Cloud +
+Docker), and the provider-truncation analysis live in
+[`chapter_13_CREW_AI_QA_Pipeline/README.md`](chapter_13_CREW_AI_QA_Pipeline/README.md).
+
+---
+
+## Chapter 14 — LLM Evaluation
+
+`chapter_14_LLM_Eval/README.md` covers *why* traditional QA breaks on LLM-powered systems, and the
+vocabulary you need before picking a tool. The tool (DeepEval or anything else) is replaceable; the
+concepts are not.
+
+**What breaks:**
+- **Non-determinism** — same prompt, different output. `assertEquals` is useless; you need
+  probabilistic, score-based checks with thresholds.
+- **Open-ended outputs** — there is no single correct answer to "summarize this document", so you
+  measure quality along several axes instead.
+- **Hallucinations** — LLMs fabricate confidently. Fluent ≠ correct, so you need faithfulness checks
+  against a source of truth.
+- **Safety and bias** — jailbreaks and prompt injection are a new attack surface, and a toxic or
+  biased response is a test failure.
+- **Cost and latency** — token cost, p95 latency, and tool-call efficiency are first-class signals,
+  not afterthoughts.
+
+**The vocabulary:** prompt, completion/response, **ground truth** (the human-written reference
+answer), **golden dataset** (curated input → expected-output pairs — your regression suite's test
+data), **evaluator/judge** (rule-based, model, or another LLM), **LLM-as-judge**, hallucination,
+**faithfulness** (does the answer stick to the retrieved context without inventing), **relevancy**
+(does it address the question at all), **context precision/recall**, traces and spans, and the eval
+harness itself.
+
+**Why a QA engineer should care:** Chapters 07, 08, and 13 all ship LLM output as a product. This is
+the chapter that tells you how to know whether any of it is any good — and it is the natural
+follow-on to the anti-hallucination rules in Chapter 02.
+
+---
+
+## Chapter 16 — End-to-End AI QA Pipeline (design)
+
+`chapter_16_E2E_QA_Pipeline/E2E_QA_Pipeline.md` is the design document that joins the earlier
+chapters into one loop — Jira in, dashboard out. It is a written flow, not runnable code; Chapter 13
+implements steps 1-5 of it.
+
+1. **Fetch Jira stories via JQL** — a LangChain or CrewAI agent runs the query.
+2. **Process stories one at a time** — e.g. `VWO-109`.
+3. **Create a test plan per story**, using the existing RAG pipeline so historical test plans steer
+   the new one.
+4. **Generate test cases** against the same RAG pipeline — previous cases, reusable patterns, domain
+   knowledge.
+5. **Convert test cases into automation-flow `.md` files**, using the advanced Playwright framework
+   as the reference.
+6. **Execute the `.md` files with Browser Bash** — a CLI tool that lets agents run those flows,
+   cheaply, on models like DeepSeek.
+7. **Emit `result.json`** — pass/fail, errors, logs.
+8. **Analyse results with an agent** — flakiness detection, RCA, triage of failures, and a push to
+   the dashboard.
+
+The point of writing it down: every box maps to a chapter you have already built (RAG → 07/08,
+CrewAI → 12/13, flaky analysis → 05), so the "pipeline" is integration work, not new invention.
+
+---
+
+## `learnings/` — build post-mortems
+
+Dated notes written while building these chapters. Each follows the same shape — problem in one
+line, the approach step by step, then what to reuse. They are the debugging sessions the finished
+code no longer shows:
+
+| Date | Note |
+| --- | --- |
+| 2026-07-11 | LangFlow Docker volume mapping — why flows vanished on `docker rm`, and the two env vars that actually move the SQLite DB. |
+| 2026-07-12 | FlagEmbedding 1.4 reranker crashing on `prepare_for_model` — bypassed with a raw transformers cross-encoder. |
+| 2026-07-18 | QABuddy.ai — generalizing a proven single-source RAG to 10 sources; disposable vector DB, one collection with a `source_type` filter. |
+| 2026-07-25 | Verify a library's API by *running* it before writing against it — the FastMCP pin and signature that were both wrong on a fresh install. |
+| 2026-08-10 | Document only what exists — diff the docs against the filesystem, and stop and ask rather than writing a README section about an empty file. |
+| 2026-08-29 | Making a CrewAI pipeline survive a provider that cannot enforce JSON schemas (the Chapter 13 structured-output ladder). |
+| 2026-08-29 | CrewAI sequential crews: the token squeeze that truncates your last agent (the Chapter 12 `04_*_Prod.py` per-agent budgets). |
+
+---
+
 ## How to Use This Repo
 
-You can read it linearly (chapter 01 → 04) or jump straight to a project:
+You can read it linearly (chapter 01 → 16) or jump straight to a project:
 
 - **"I want better test cases now."** → `chapter_02_Prompt_Eng/templates/01_TestCaseGeneration_Prompt.md` or `02_TestCases_from_prd`.
 - **"I want to write tests from a PDF/API doc."** → `chapter_02_Prompt_Eng/Project1_TC_Gen/`.
@@ -1574,6 +1861,16 @@ You can read it linearly (chapter 01 → 04) or jump straight to a project:
 - **"I want CSV/file I/O and `.env` patterns before touching the automation code."** → `chapter_11_Python_Learning/ex_20_Collections_FileIO/`.
 - **"I want pytest markers before writing real test suites."** → `chapter_11_Python_Learning/ex_21_PyTest/`.
 - **"I want a multi-agent Crew that writes test cases or a full test strategy doc."** → `chapter_12_CrewAI/`.
+- **"I want a crew that triages a live Jira bug — severity, RCA, and a regression plan."** → `chapter_12_CrewAI/04_Build_QABugTriageCrew_Prod.py`.
+- **"My last agent's output keeps getting cut off mid-sentence."** → `learnings/2026-08-29-crewai-sequential-token-squeeze.md`.
+- **"I want to call a Jira MCP server from a CrewAI agent."** → `chapter_12_CrewAI/05_QAPipeline_TP_TC_TW_PW.py`.
+- **"I want to see the prompt that generated a whole application."** → `chapter_12_CrewAI/Final_QA_Pipeline.md`.
+- **"I want a UI where a Jira ID becomes a test plan, test cases, and Playwright specs."** → `chapter_13_CREW_AI_QA_Pipeline/`.
+- **"I want a CrewAI pipeline that validates its own agents instead of trusting them."** → `chapter_13_CREW_AI_QA_Pipeline/src/jira_qa_crew/services/`.
+- **"My provider rejects `output_pydantic` with a 400."** → `chapter_13_CREW_AI_QA_Pipeline/` (structured-output ladder) and `learnings/2026-08-29-crewai-provider-structured-output.md`.
+- **"I need to test an LLM feature and `assertEquals` no longer works."** → `chapter_14_LLM_Eval/`.
+- **"I want the big picture — JQL to dashboard — before building any of it."** → `chapter_16_E2E_QA_Pipeline/E2E_QA_Pipeline.md`.
+- **"Something broke the same way for me; has this repo hit it before?"** → `learnings/`.
 
 ## Requirements
 
@@ -1589,8 +1886,10 @@ You can read it linearly (chapter 01 → 04) or jump straight to a project:
 - For Chapter 8 QABuddy.ai: **Python 3.13** (`uv venv` recommended), `pip install -r chapter_08_QABuddyAI/requirements.txt`, a `GROQ_API_KEY`, and `git` to clone the two framework repos via `scripts/fetch_repos.sh`. No Docker/Qdrant server needed locally — Docker Compose is only for the droplet deploy path.
 - For Job Tracker AI: **Node.js 20.19+ or 22.12+** and npm for Vite 8.
 - For Chapter 10 MCP server: **Python 3.11+** and **uv** (`uv sync` installs `fastmcp==2.14.7`). No API keys needed — the server only reads the local CSV.
-- For Chapter 11 Python Learning: **Python 3.x** only, no packages — `python <lab_file>.py` runs any lab directly. Exceptions: `ex_18_OOPs_Python/04_Encapsulation/Lab131_Encap_NICE.py` needs `pip install python-dotenv` plus a local `.env` (`VWO_USERNAME`, `VWO_PASSWORD`); `ex_20_Collections_FileIO/Lab_184_Env.py` needs `python-dotenv` plus its own `.env` (`DB_PASSWORD`); `Lab_187.py` needs `pip install pandas`; `ex_21_PyTest/` needs `pip install pytest` — all gitignored/optional, install only what you're running.
-- For Chapter 12 CrewAI: **Python 3.10+**, `pip install crewai python-dotenv`, and a `GROQ_API_KEY` (Groq's OpenAI-compatible endpoint — no OpenAI key needed) in a local `.env` under `chapter_12_CrewAI/`. On **Python 3.14** also `pip install -U chromadb` (≥1.5) — the chromadb ~1.1 that crewai pins uses pydantic v1 internals that break on 3.14.
+- For Chapter 11 Python Learning: **Python 3.x** only, no packages — `python <lab_file>.py` runs any lab directly. Exceptions: `ex_18_OOPs_Python/04_Encapsulation/Lab131_Encap_NICE.py` needs `pip install python-dotenv` plus a local `.env` (`VWO_USERNAME`, `VWO_PASSWORD`); `ex_20_Collections_FileIO/Lab_184_Env.py` needs `python-dotenv` plus its own `.env` (`DB_PASSWORD`); `Lab_187_PandaCSV.py` needs `pip install pandas`; `ex_21_PyTest/` needs `pip install pytest` — all gitignored/optional, install only what you're running.
+- For Chapter 12 CrewAI: **Python 3.10+**, `pip install crewai python-dotenv`, and a `GROQ_API_KEY` (Groq's OpenAI-compatible endpoint — no OpenAI key needed) in a local `.env` under `chapter_12_CrewAI/`. On **Python 3.14** also `pip install -U chromadb` (≥1.5) — the chromadb ~1.1 that crewai pins uses pydantic v1 internals that break on 3.14. Scripts `04_*` and `05_*` additionally need Jira credentials (`JIRA_BASE_URL`/`JIRA_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`) plus `pip install requests`; `05_*` also needs **uv** on PATH so CrewAI can launch `uvx mcp-atlassian` over stdio; `04_*` optionally takes an `OPENROUTER_API_KEY` for failover.
+- For Chapter 13 Jira QA Crew: **Python 3.11 or 3.13** (not 3.14 — `crewai` declares `Requires-Python <3.14`; `requirements-py314.txt` documents a `uv`-based workaround), `pip install -r chapter_13_CREW_AI_QA_Pipeline/requirements.txt` (crewai 1.15.17, crewai-tools[mcp], streamlit, pydantic 2.x), an `LLM_API_KEY` for whichever model you set in `LLM_MODEL`, and Jira REST or MCP credentials. Demo mode (`DEMO_MODE=true`) runs off bundled fixtures with no Jira. Node.js is only needed for `tools/playwright-check/` if you want to compile the generated specs.
+- For Chapter 14 LLM Eval and Chapter 16 E2E Pipeline: reading only — no install.
 
 ## Chapter History
 
