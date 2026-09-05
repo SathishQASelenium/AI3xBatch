@@ -1,0 +1,14 @@
+1. Open command prompt, if any venv was active, give "deactivate" command, it will get closed 
+2. Need to navigate to the folder chapter_15_DeepEval
+3. we can give this command to install virtual environment or i have already installed using the claude "py -3.14 -m venv .venv"
+4. Now we need to activate the virtual environment using ".venv\Scripts\activate"
+5. Now, we will get (.venv) infront of the command prompt
+6. Next we need to give this command to make sure pip is latest "python -m pip install --upgrade pip"
+7. Now we need to install the deepeval along with request "pip install -U deepeval requests"
+8. Next to validate whether they are installed successfully, we print the version using "python -c "import deepeval, requests; print(deepeval.__version__, requests.__version__)"
+9. Later once all work is over, we can deactivate the venv using "deactivate"
+
+How to execute from scratch:
+1. Once we open a new terminal, navigate to folder "cd chapter_15_DeepEval"
+2. Activate the virtual environment using the code ".\.venv\Scripts\Activate.ps1"
+3. Once venv is activated, we can execute the code "deepeval test run test_01_Anwser_Relevancy.py"

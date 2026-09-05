@@ -195,6 +195,11 @@ mindmap
       Golden dataset, ground truth, judge
       Hallucination, faithfulness, relevancy
       Context precision/recall, traces and spans
+    Ch 15 - DeepEval
+      pytest-native LLM evaluation
+      LLM-as-judge scoring vs assertEquals
+      Answer Relevancy metric + thresholds
+      OpenRouter judge, temperature=0
     Ch 16 - E2E QA Pipeline design
       JQL to Jira stories
       RAG-backed test plan + test cases
@@ -610,6 +615,13 @@ mindmap
 │
 ├── chapter_14_LLM_Eval/           Evaluating LLM-powered systems
 │   └── README.md                  Why traditional QA breaks + the eval vocabulary
+│
+├── chapter_15_DeepEval/           Chapter 14's theory made runnable, in pytest
+│   ├── README.md                  Install, judge config, run, Windows troubleshooting
+│   ├── test_01_Anwser_Relevancy.py   Lab 1 - AnswerRelevancyMetric on a Q&A pair
+│   ├── requirements.txt           Pinned; documents the portalocker[win32] trap
+│   ├── Notes.md · MyNotes.txt     Class notes and setup transcript
+│   └── .env                       OPENROUTER_API_KEY + judge model config (gitignored)
 │
 ├── chapter_16_E2E_QA_Pipeline/    Design doc for the full JQL -> dashboard loop
 │   └── E2E_QA_Pipeline.md         8-step flow: JQL, RAG test plan/cases, Playwright MD, Browser Bash, RCA
@@ -1790,6 +1802,59 @@ follow-on to the anti-hallucination rules in Chapter 02.
 
 ---
 
+## Chapter 15 — DeepEval
+
+`chapter_15_DeepEval/` is Chapter 14's theory made runnable. [DeepEval](https://deepeval.com/) is a
+pytest-native LLM evaluation framework, so the whole chapter is `pytest` you already know, with the
+assertion swapped out.
+
+**The swap.** `assert response == "4"` fails the moment the model answers `"The answer is 4."` —
+which is correct. Equality is the wrong tool for non-deterministic output. DeepEval replaces it with
+a **metric**: a second LLM (the *judge*) scores the output 0.0-1.0 against a rubric, and you assert
+on a threshold.
+
+```python
+test = LLMTestCase(input="What is 2+2?", actual_output="4", expected_output="4")
+assert_test(test, [AnswerRelevancyMetric(threshold=0.9)])
+```
+
+**Three consequences that shape everything after:**
+- **Every assertion is a paid API call.** A 500-case suite is 500 calls per run. Golden datasets stay
+  small on purpose, and `deepeval test run -c` reuses cached scores while you iterate on structure.
+- **The judge is itself an LLM, so it can be wrong.** Pin `temperature=0` and read the `reason`
+  string it returns — the number alone hides a judge that misread the rubric.
+- **Thresholds are a design decision, not a default.** `0.9` is strict, `0.5` waves almost anything
+  through. Each metric needs its own call.
+
+Scores also drift across provider-side model updates, so a suite can fail tomorrow with no change to
+your code. That is a property of the technique, not a bug to fix.
+
+**Judge provider.** The chapter runs on OpenRouter (`openai/gpt-oss-120b`, `-t 0`). OpenAI and Groq
+are documented alternatives. `deepeval diagnose` prints which provider actually won and from which
+file — reach for it first when a run misbehaves.
+
+```bash
+cd chapter_15_DeepEval
+py -3.14 -m venv .venv && .\.venv\Scripts\Activate.ps1   # PowerShell
+pip install -r requirements.txt
+deepeval set-openrouter -m "openai/gpt-oss-120b" -t 0 --save "dotenv:.env"
+$env:PYTHONUTF8="1"
+deepeval test run test_01_Anwser_Relevancy.py
+```
+
+> **Windows, install from `requirements.txt` — not `pip install -U deepeval`.** The plain install
+> omits `portalocker[win32]`, so `portalocker` falls back to `msvcrt`, which cannot take a shared
+> lock. DeepEval's cache then reads back `None` and dereferences it *after* the metric has already
+> scored: the results table prints `PASSED` while pytest reports `FAILED` with
+> `AttributeError: 'NoneType' object has no attribute 'test_cases_lookup_map'`. Two more Windows
+> traps — a `rich` `UnicodeEncodeError` without `PYTHONUTF8=1`, and `--save=dotenv:.env` rejecting a
+> bare `--save .env` — are documented with fixes in
+> [`chapter_15_DeepEval/README.md`](chapter_15_DeepEval/README.md).
+
+Verified 2026-09-05 on Windows 11 + CPython 3.14.4: 1 passed, score 1.0, ~15s, $0.00016 per run.
+
+---
+
 ## Chapter 16 — End-to-End AI QA Pipeline (design)
 
 `chapter_16_E2E_QA_Pipeline/E2E_QA_Pipeline.md` is the design document that joins the earlier
@@ -1868,7 +1933,9 @@ You can read it linearly (chapter 01 → 16) or jump straight to a project:
 - **"I want a UI where a Jira ID becomes a test plan, test cases, and Playwright specs."** → `chapter_13_CREW_AI_QA_Pipeline/`.
 - **"I want a CrewAI pipeline that validates its own agents instead of trusting them."** → `chapter_13_CREW_AI_QA_Pipeline/src/jira_qa_crew/services/`.
 - **"My provider rejects `output_pydantic` with a 400."** → `chapter_13_CREW_AI_QA_Pipeline/` (structured-output ladder) and `learnings/2026-08-29-crewai-provider-structured-output.md`.
-- **"I need to test an LLM feature and `assertEquals` no longer works."** → `chapter_14_LLM_Eval/`.
+- **"I need to test an LLM feature and `assertEquals` no longer works."** → `chapter_14_LLM_Eval/` for the concepts, then `chapter_15_DeepEval/` to actually run one.
+- **"I want to score LLM output from pytest instead of eyeballing it."** → `chapter_15_DeepEval/test_01_Anwser_Relevancy.py`.
+- **"DeepEval says PASSED but pytest says FAILED on Windows."** → `chapter_15_DeepEval/README.md` (the `portalocker[win32]` trap).
 - **"I want the big picture — JQL to dashboard — before building any of it."** → `chapter_16_E2E_QA_Pipeline/E2E_QA_Pipeline.md`.
 - **"Something broke the same way for me; has this repo hit it before?"** → `learnings/`.
 
@@ -1889,6 +1956,7 @@ You can read it linearly (chapter 01 → 16) or jump straight to a project:
 - For Chapter 11 Python Learning: **Python 3.x** only, no packages — `python <lab_file>.py` runs any lab directly. Exceptions: `ex_18_OOPs_Python/04_Encapsulation/Lab131_Encap_NICE.py` needs `pip install python-dotenv` plus a local `.env` (`VWO_USERNAME`, `VWO_PASSWORD`); `ex_20_Collections_FileIO/Lab_184_Env.py` needs `python-dotenv` plus its own `.env` (`DB_PASSWORD`); `Lab_187_PandaCSV.py` needs `pip install pandas`; `ex_21_PyTest/` needs `pip install pytest` — all gitignored/optional, install only what you're running.
 - For Chapter 12 CrewAI: **Python 3.10+**, `pip install crewai python-dotenv`, and a `GROQ_API_KEY` (Groq's OpenAI-compatible endpoint — no OpenAI key needed) in a local `.env` under `chapter_12_CrewAI/`. On **Python 3.14** also `pip install -U chromadb` (≥1.5) — the chromadb ~1.1 that crewai pins uses pydantic v1 internals that break on 3.14. Scripts `04_*` and `05_*` additionally need Jira credentials (`JIRA_BASE_URL`/`JIRA_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`) plus `pip install requests`; `05_*` also needs **uv** on PATH so CrewAI can launch `uvx mcp-atlassian` over stdio; `04_*` optionally takes an `OPENROUTER_API_KEY` for failover.
 - For Chapter 13 Jira QA Crew: **Python 3.11 or 3.13** (not 3.14 — `crewai` declares `Requires-Python <3.14`; `requirements-py314.txt` documents a `uv`-based workaround), `pip install -r chapter_13_CREW_AI_QA_Pipeline/requirements.txt` (crewai 1.15.17, crewai-tools[mcp], streamlit, pydantic 2.x), an `LLM_API_KEY` for whichever model you set in `LLM_MODEL`, and Jira REST or MCP credentials. Demo mode (`DEMO_MODE=true`) runs off bundled fixtures with no Jira. Node.js is only needed for `tools/playwright-check/` if you want to compile the generated specs.
+- For Chapter 15 DeepEval: **Python 3.11+** (verified on 3.14.4), `pip install -r chapter_15_DeepEval/requirements.txt` (deepeval 4.2.1, `portalocker[win32]`, requests), and a judge-LLM key — `OPENROUTER_API_KEY` in a local `.env` under `chapter_15_DeepEval/`, or `OPENAI_API_KEY`/Groq via the alternative `deepeval set-*` commands. Install from `requirements.txt`, not `pip install -U deepeval`: the plain install skips the `portalocker[win32]` extra that every Windows run needs. Windows also needs `PYTHONUTF8=1`.
 - For Chapter 14 LLM Eval and Chapter 16 E2E Pipeline: reading only — no install.
 
 ## Chapter History

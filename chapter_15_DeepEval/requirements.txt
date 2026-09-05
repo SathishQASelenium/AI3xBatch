@@ -1,0 +1,33 @@
+# Pinned to the versions this chapter was built and tested against
+# (Windows, CPython 3.14.4, 2026-09-05). Mutually compatible as installed.
+#
+# portalocker[win32] is NOT optional on Windows. `pip install deepeval` pulls
+# portalocker but not the extra, so it falls back to msvcrt, which cannot take
+# a shared lock. deepeval's test-run cache then reads back None and the run
+# dies AFTER the metric has already scored:
+#     AttributeError: 'NoneType' object has no attribute 'test_cases_lookup_map'
+# The results table still prints PASSED while pytest reports FAILED.
+# The extra installs pywin32, which fixes it.
+#
+# Install (Windows, PowerShell):
+#   py -3.14 -m venv .venv
+#   .\.venv\Scripts\Activate.ps1
+#   pip install -U pip
+#   pip install -r requirements.txt
+#
+# Configure the judge LLM (writes keys + model into .env, which is git-ignored):
+#   deepeval set-openrouter -m "openai/gpt-oss-120b" -t 0 --save "dotenv:.env"
+#
+# Run:
+#   $env:PYTHONUTF8="1"        # rich prints box-drawing chars; cp1252 console
+#                              # raises UnicodeEncodeError without this
+#   deepeval test run test_01_Anwser_Relevancy.py
+
+deepeval==4.2.1
+portalocker[win32]==4.3.0
+requests==2.34.2
+
+# Pulled in by deepeval, pinned because the labs invoke them directly.
+openai==3.8.0
+pytest==9.1.1
+python-dotenv==1.2.3

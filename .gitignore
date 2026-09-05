@@ -8,6 +8,15 @@ target/
 # Python
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Python virtual environments (any chapter). venv writes its own .gitignore,
+# but virtualenv/conda do not — keep these explicit.
+.venv/
+venv/
+ENV/
 
 # IDE
 .idea/
@@ -29,6 +38,12 @@ CLAUDE.local.md
 .commandcode/
 .env
 env
+
+# Secrets. .env.local is where `deepeval login` writes keys by default, and
+# .deepeval/ is its JSON keystore — both hold plaintext API keys.
+.env.local
+.env.*.local
+.deepeval/
 
 # Local browser verification artifacts
 .playwright-mcp/
