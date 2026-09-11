@@ -147,7 +147,15 @@ Undo with the matching `unset-` command (`deepeval unset-openrouter`).
 ```powershell
 $env:PYTHONUTF8="1"
 deepeval test run test_01_Anwser_Relevancy.py
+deepeval test run test_02_OpenRouter_Qwen_Vs_OpenAI.py   # Lab 2 — needs SUBJECT_MODEL_NAME
 ```
+
+Lab 2 reads two extra env vars from `.env` (both optional, with defaults):
+
+| Var | Default | Purpose |
+| --- | --- | --- |
+| `SUBJECT_MODEL_NAME` | `qwen/qwen3-32b` | the model under test (OpenRouter slug) |
+| `OPENROUTER_MODEL_NAME` | `openai/gpt-oss-120b` | the judge |
 
 Useful flags:
 
@@ -169,6 +177,7 @@ table and no token cost.
 | File | Purpose |
 | --- | --- |
 | `test_01_Anwser_Relevancy.py` | Lab 1 — Answer Relevancy on a trivial Q&A pair |
+| `test_02_OpenRouter_Qwen_Vs_OpenAI.py` | Lab 2 — Qwen (subject) vs gpt-oss-120b (judge): Answer Relevancy + Hallucination |
 | `requirements.txt` | Pinned deps + the Windows landmines, documented |
 | `Notes.md` | Original class notes |
 | `MyNotes.txt` | Step-by-step setup transcript |
@@ -252,3 +261,14 @@ No judge provider set — DeepEval fell back to its OpenAI default. Run
 - Only a **passing** case exists. Threshold tuning cannot be taught without a
   failing one (e.g. `actual_output="Paris is the capital of France"` against
   `input="What is 2+2?"` scores near 0).
+
+**Partially closed by `test_02_OpenRouter_Qwen_Vs_OpenAI.py`:**
+
+- Adds the missing `HallucinationMetric`, so both fundamental metrics are now
+  demonstrated.
+- Introduces a **real subject model** (`qwen/qwen3-32b` via OpenRouter) instead
+  of a hard-coded answer, and keeps the subject ≠ judge rule (Qwen scored by
+  gpt-oss-120b).
+- Still no deliberately **failing** case — threshold tuning remains untaught.
+  Add one by pointing `SUBJECT_MODEL_NAME` at a weak model, or by asserting a
+  stricter threshold than the answer earns.

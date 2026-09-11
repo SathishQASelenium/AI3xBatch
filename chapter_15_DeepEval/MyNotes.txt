@@ -9,6 +9,7 @@
 9. Later once all work is over, we can deactivate the venv using "deactivate"
 
 How to execute from scratch:
-1. Once we open a new terminal, navigate to folder "cd chapter_15_DeepEval"
-2. Activate the virtual environment using the code ".\.venv\Scripts\Activate.ps1"
-3. Once venv is activated, we can execute the code "deepeval test run test_01_Anwser_Relevancy.py"
+1. Once we open a new terminal, navigate to folder ->cd chapter_15_DeepEval
+2. Give this command to enable rich box-drawing chars -> $env:PYTHONUTF8="1"
+3. Activate the virtual environment using the code -> .\.venv\Scripts\Activate.ps1
+4. Once venv is activated, we can execute the code -> deepeval test run test_01_Anwser_Relevancy.py / deepeval test run test_02_OpenRouter_Qwen_Vs_OpenAI.py

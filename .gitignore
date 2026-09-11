@@ -52,3 +52,15 @@ env
 # CrewAI timestamped strategy outputs (regenerable; sample kept as chapter_12_CrewAI/test_strategy_output.md)
 test_strategy_2*.md
 chapter_12_CrewAI/test_strategy_2*.md
+
+# Node.js dependencies (any chapter)
+node_modules/
+
+# ChromaDB vector store (regenerable via ingest)
+chroma_db/
+
+# Vercel local project metadata (contains project/org ids)
+.vercel/
+
+# DeepEval dashboard static build (regenerable via build_static.py)
+chapter_16_DeepEval_Framework/03_DeepEvalFramework/dashboard/snapshot/dist/
