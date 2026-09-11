@@ -151,7 +151,7 @@ page = f'''<!doctype html>
     Run buttons are replaced by a Recorded badge &mdash; everything else, including the
     per-case Details, is the real output.
     <a href="/how-it-works">Read how the framework works</a>, or
-    <a href="https://github.com/SathishQASelenium/AI3xBatch/tree/main/chapter_16_DeepEval_Framework/03_DeepEvalFramework">clone
+    <a href="https://github.com/SathishQASelenium/AI3xBatch/tree/master/chapter_16_DeepEval_Framework/03_DeepEvalFramework">clone
     the repo</a> to run it live. &middot;
     <a href="https://app.thetestingacademy.com/ai/deepeval-framework">Course notes</a>
   </div>
@@ -274,7 +274,7 @@ if EXPLAINER_SRC.exists():
      align-items:center;font-family:var(--sans);font-size:14px">
   <strong style="font-weight:600">DeepEval Framework</strong>
   <a href="/" style="color:var(--blue);text-decoration:none">&larr; the dashboard</a>
-  <a href="https://github.com/SathishQASelenium/AI3xBatch/tree/main/chapter_16_DeepEval_Framework/03_DeepEvalFramework"
+  <a href="https://github.com/SathishQASelenium/AI3xBatch/tree/master/chapter_16_DeepEval_Framework/03_DeepEvalFramework"
      style="color:var(--blue);text-decoration:none;margin-left:auto">source on GitHub</a>
 </div>'''
     wrapped = (
