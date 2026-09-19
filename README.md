@@ -206,12 +206,28 @@ mindmap
       DeepEval judge + 25 metric cards (Subsystem C)
       Live dashboard + recorded static showcase
       pytest suite + token accounting
-    Ch 17 - E2E QA Pipeline design
-      JQL to Jira stories
-      RAG-backed test plan + test cases
-      Test cases to Playwright flow MD
-      Browser Bash execution to result.json
-      Flakiness + RCA analysis to dashboard
+    Ch 17 - LangChain + E2E QA Pipeline design
+      LangChain agents for QA (Python)
+        Hello LangChain / Gemini / Ollama
+        System prompts, streaming
+        Parallel vs sequential agents
+        Tools, multi-tool, structured output
+        Playwright agent orchestration
+      E2E QA Pipeline design doc
+        JQL to Jira stories
+        RAG-backed test plan + test cases
+        Test cases to Playwright flow MD
+        Browser Bash execution to result.json
+        Flakiness + RCA analysis to dashboard
+    Project 01 - Test Plan Generator
+      Groq PRD -> test plan
+      Anti-hallucination engine
+    Project 02 - REST API Framework
+      RICE-POT Rest Assured
+      Layered API automation + CI/CD
+    Project 03 - BLAST Test Strategy
+      Jira -> test strategy React app
+      B.L.A.S.T. + RICE-POT reference docs
     learnings/
       Dated post-mortems from building the chapters
 ```
@@ -652,8 +668,35 @@ mindmap
 │       ├── token_meter.py            per-run token accounting (target vs judge)
 │       └── dashboard/                FastAPI grid UI + snapshot/ (recorded static build for Vercel)
 │
-├── chapter_17_E2E_QA_Pipeline/    Design doc for the full JQL -> dashboard loop
-│   └── E2E_QA_Pipeline.md         8-step flow: JQL, RAG test plan/cases, Playwright MD, Browser Bash, RCA
+├── chapter_17_LangChain/       LangChain agents for QA + the E2E pipeline design doc
+│   ├── LangChain_Notes.html    Standalone animated study guide (open in a browser)
+│   ├── E2E_QA_Pipeline.md      8-step flow: JQL, RAG test plan/cases, Playwright MD, Browser Bash, RCA
+│   ├── MyNotes.txt             Setup transcript (venv, installs, run order)
+│   └── src/
+│       ├── chapters/           001..011 LangChain lab scripts (see Chapter 17 section)
+│       ├── playwright_tools.py  Shared Playwright tool wrappers for the agent scripts
+│       └── screenshots/        final_state / login_success / screenshot
+│
+├── Project_01_TestPlanGenerator/   Groq PRD -> structured test plan web app
+│   ├── README.md · index.html
+│   ├── docs/                   Anti-hallucination rules + Restful Booker ATB12x reference
+│   ├── output/                 Generated "Test Plan — VWO Login Dashboard.docx"
+│   └── screenshots/            App UI captures
+│
+├── Project_02_REST_API_Framework/  RICE-POT Rest Assured API automation framework
+│   ├── 01_rest-assured-framework-prompt.md   The RICE-POT build prompt
+│   ├── 02_Restful_Booker_API_Test_Cases.md   Generated test-case set
+│   ├── 03_API_Test_Generation.md · 04_Anti_Hallucinations_Rules.md
+│   └── RICEPOT_RESTASSURED_API_Project/      Maven + TestNG + Rest Assured + Allure
+│       ├── src/main/java/com/ricepot/api/    base · config · models · services · utils
+│       ├── src/test/java/com/ricepot/api/    AuthTests · BookingTests · PingTests + dataProviders
+│       ├── .github/workflows/api-tests.yml   CI: mvn test + Allure upload
+│       └── pom.xml · README.md
+│
+├── Project_03_BLAST_FW_TEST_STRATEGY/   Jira -> test strategy (reference docs for the React app)
+│   ├── B.L.A.S.T.md · RICE_POT.md · TestStrategy_Template.md · Objective.md
+│   ├── CLAUDE.md               Points to the deliverable app in the sibling blast-test-strategy dir
+│   └── task_plan.md · findings.md · progress.md · LLM.md
 │
 └── learnings/                     Dated build post-mortems (problem -> approach -> what to reuse)
     ├── 2026-07-11-langflow-docker-volume-db-persistence.md
@@ -2087,11 +2130,50 @@ venv/bin/python -m pytest tests/chatbot/test_03_chatbot_hallucination.py
 
 ---
 
-## Chapter 17 — End-to-End AI QA Pipeline (design)
+## Chapter 17 — LangChain Agents for QA + E2E Pipeline Design
 
-`chapter_17_E2E_QA_Pipeline/E2E_QA_Pipeline.md` is the design document that joins the earlier
-chapters into one loop — Jira in, dashboard out. It is a written flow, not runnable code; Chapter 13
-implements steps 1-5 of it.
+`chapter_17_LangChain/` has two halves. The first is a hands-on **LangChain (Python)** study guide
+for testers — eleven runnable labs that go from "first agent" to a Playwright agent that drives a
+browser. The second is the **E2E QA pipeline design doc** that joins the earlier chapters into one
+loop.
+
+### LangChain labs (`src/chapters/`)
+
+Each script is self-contained and runs against a provider configured in `.env` (Gemini, Groq,
+Ollama, or OpenRouter depending on the lab):
+
+| # | Script | What it shows |
+|---|--------|---------------|
+| 001 | `001_Hello_LC.py` | First LangChain agent — the minimal chat model call. |
+| 002 | `002_Hello_Gemini.py` | Same shape against Google Gemini (`langchain-google-genai`). |
+| 003 | `003_Hello_Ollama.py` | Local inference via Ollama (`langchain-ollama`) — no API key. |
+| 004 | `004_Hello_Gemini_Stream.py` | Streaming tokens instead of waiting for the full completion. |
+| 005 | `005_SystemPrompt.py` | System-prompt steering — persona + constraints before the user turn. |
+| 006 | `006_Agent_Parallel_Vs_Sequential.py` | Parallel vs. sequential agent execution and when each fits. |
+| 007 | `007_Tool.py` | Giving an agent a single tool to call. |
+| 008 | `008_MultiTool.py` | Multiple tools and the agent choosing between them. |
+| 009 | `009_Structure_output.py` | Structured output (Pydantic) instead of free-form text. |
+| 010 | `010_Playwright_Agent_Orch.py` | A Playwright agent that orchestrates browser actions. |
+| 011 | `011_Playwright_Agent_OpenRouter.py` | The same Playwright agent over OpenRouter. |
+
+`playwright_tools.py` holds the shared Playwright tool wrappers the agent scripts import.
+`LangChain_Notes.html` is a standalone animated study guide covering the same ground, and
+`MyNotes.txt` is the setup transcript (venv, installs, run order).
+
+**Run it:**
+```bash
+cd chapter_17_LangChain/src
+python -m venv .venv && .venv\Scripts\activate
+pip install -U langchain langchain-google-genai langchain-groq langchain-deepseek langchain-ollama python-dotenv requests playwright
+playwright install chromium
+python chapters/001_Hello_LC.py
+python chapters/011_Playwright_Agent_OpenRouter.py
+```
+
+### E2E QA Pipeline design (`E2E_QA_Pipeline.md`)
+
+The design document that joins the earlier chapters into one loop — Jira in, dashboard out. It is a
+written flow, not runnable code; Chapter 13 implements steps 1-5 of it.
 
 1. **Fetch Jira stories via JQL** — a LangChain or CrewAI agent runs the query.
 2. **Process stories one at a time** — e.g. `VWO-109`.
@@ -2109,6 +2191,80 @@ implements steps 1-5 of it.
 
 The point of writing it down: every box maps to a chapter you have already built (RAG → 07/08,
 CrewAI → 12/13, flaky analysis → 05), so the "pipeline" is integration work, not new invention.
+
+---
+
+## Project 01 — Test Plan Generator
+
+`Project_01_TestPlanGenerator/` is an AI-powered web app that turns a **Product Requirement
+Document (PRD)** into a structured, professional test plan. It uses the **Groq API** and the same
+strict anti-hallucination rules from Chapter 02.
+
+**What's here:**
+- `index.html` — the single-page app (paste a PRD, get a test plan).
+- `docs/Anti_Hallucinations_Rules.md` — the verification framework the generator enforces.
+- `docs/Test Plan - Restful Booker ATB12x.docx.pdf` — the industry-standard output format reference.
+- `output/Test Plan — VWO Login Dashboard.docx` — a generated sample plan.
+- `screenshots/` — UI captures of the app.
+
+**Key features:** AI-driven generation via Groq, strict anti-hallucination engine (verifiable facts
+only, no assumptions, "Insufficient information to determine" for gaps, traceability to the source
+doc), professional test-plan formatting (objectives, scope, scenarios, expected results,
+environment), secure user-supplied API key, and copy/download export.
+
+---
+
+## Project 02 — RICE-POT Rest Assured API Framework
+
+`Project_02_REST_API_Framework/` is an enterprise-grade, layered **Rest Assured** API automation
+framework for the **Restful-Booker API**, generated from a RICE-POT prompt. It demonstrates advanced
+SDET patterns, strict anti-hallucination verification, and a production CI/CD pipeline.
+
+**What's here:**
+- `01_rest-assured-framework-prompt.md` — the RICE-POT build prompt that generated the framework.
+- `02_Restful_Booker_API_Test_Cases.md` — the generated test-case set.
+- `03_API_Test_Generation.md` · `04_Anti_Hallucinations_Rules.md` — supporting prompt material.
+- `RICEPOT_RESTASSURED_API_Project/` — the Maven project itself:
+  - `src/main/java/com/ricepot/api/` — layered `base` (BaseRequest), `config` (ConfigManager),
+    `models` (POJOs: Booking, BookingDates, AuthRequest), `services` (BookingService), `utils`
+    (AuthManager, ExcelUtils, JsonUtils).
+  - `src/test/java/com/ricepot/api/` — `AuthTests`, `BookingTests`, `PingTests` + `dataProviders`.
+  - `.github/workflows/api-tests.yml` — CI: `mvn test` on push to main + Allure artifact upload.
+  - `pom.xml` · `README.md`.
+
+**Run it:**
+```bash
+cd Project_02_REST_API_Framework/RICEPOT_RESTASSURED_API_Project
+mvn test        # runs tests + generates Allure report artifacts
+```
+
+---
+
+## Project 03 — BLAST Test Strategy (Jira → Test Strategy)
+
+`Project_03_BLAST_FW_TEST_STRATEGY/` holds the **reference documents** for Project 03. The
+deliverable — a React app that fetches a Jira issue and auto-generates a test strategy via GROQ —
+lives in the sibling `blast-test-strategy/` directory (see `CLAUDE.md`).
+
+**What's here:**
+- `B.L.A.S.T.md` — the system prompt / agent protocol defining the 5-phase build process
+  (Blueprint, Link, Architect, Stylize, Trigger).
+- `RICE_POT.md` — the prompt framework used to instruct the LLM.
+- `TestStrategy_Template.md` — the template the AI uses to structure generated test strategies.
+- `Objective.md` — the original task brief: build a React app that takes Jira config + GROQ details
+  and a Jira ID, then auto-generates a test strategy from the template.
+- `task_plan.md` · `findings.md` · `progress.md` · `LLM.md` — the B.L.A.S.T. project-memory files.
+
+**The app** (`../Project_03_BLAST_FW_JIRA_TS_AI_AGENT/blast-test-strategy/`): a Vite + React app with
+a Settings page (Jira email/token/base URL + GROQ key, persisted to localStorage) and a Generate
+page (enter a Jira ID → fetch the issue → GROQ builds a test strategy from the template using the
+B.L.A.S.T. + RICE-POT system prompt).
+
+```bash
+cd ../Project_03_BLAST_FW_JIRA_TS_AI_AGENT/blast-test-strategy
+npm install
+npm run dev
+```
 
 ---
 
@@ -2168,7 +2324,11 @@ You can read it linearly (chapter 01 → 16) or jump straight to a project:
 - **"I need to test an LLM feature and `assertEquals` no longer works."** → `chapter_14_LLM_Eval/` for the concepts, then `chapter_15_DeepEval/` to actually run one.
 - **"I want to score LLM output from pytest instead of eyeballing it."** → `chapter_15_DeepEval/test_01_Anwser_Relevancy.py`.
 - **"DeepEval says PASSED but pytest says FAILED on Windows."** → `chapter_15_DeepEval/README.md` (the `portalocker[win32]` trap).
-- **"I want the big picture — JQL to dashboard — before building any of it."** → `chapter_17_E2E_QA_Pipeline/E2E_QA_Pipeline.md`.
+- **"I want the big picture — JQL to dashboard — before building any of it."** → `chapter_17_LangChain/E2E_QA_Pipeline.md`.
+- **"I want to learn LangChain agents for QA, from first agent to a Playwright agent."** → `chapter_17_LangChain/src/chapters/`.
+- **"I want a PRD turned into a structured test plan by Groq."** → `Project_01_TestPlanGenerator/`.
+- **"I want a layered Rest Assured API framework with CI/CD, generated from a prompt."** → `Project_02_REST_API_Framework/`.
+- **"I want a Jira ID turned into a test strategy via GROQ."** → `Project_03_BLAST_FW_TEST_STRATEGY/` (reference docs) and the `blast-test-strategy/` React app it points to.
 - **"I want to score a real chatbot and a RAG pipeline across 25 metrics from pytest or a dashboard."** → `chapter_16_DeepEval_Framework/03_DeepEvalFramework/`.
 - **"I want to see the prompts that built a whole evaluation framework, verbatim."** → `chapter_16_DeepEval_Framework/prompts_deep_eval_framework.md`.
 - **"Something broke the same way for me; has this repo hit it before?"** → `learnings/`.
@@ -2194,6 +2354,10 @@ You can read it linearly (chapter 01 → 16) or jump straight to a project:
 - For Chapter 14 LLM Eval: reading only — no install.
 - For Chapter 16 DeepEval Framework: **Python 3.11+**, `pip install -r chapter_16_DeepEval_Framework/03_DeepEvalFramework/requirements.txt` (deepeval, pytest, fastapi, uvicorn, python-dotenv), a **Groq API key** for the judge, and **Ollama** with `nomic-embed-text` pulled for the RAG Explorer's embeddings. The two apps under test each have their own `requirements.txt` (the chatbot and RAG Explorer both need the `groq` package); Subsystem A and Subsystem B each need their own `.env`, and the dashboard needs the judge key. The static showcase needs the **Vercel CLI** (`vercel deploy`) if you want to ship it.
 - For the E2E Pipeline design doc (Chapter 17): reading only — no install.
+- For Chapter 17 LangChain labs: **Python 3.10+**, `pip install langchain langchain-google-genai langchain-groq langchain-deepseek langchain-ollama python-dotenv requests playwright`, a provider key in `.env` (Gemini/Groq/OpenRouter) or local **Ollama**, and `playwright install chromium` for the Playwright agent labs.
+- For Project 01 Test Plan Generator: a browser and a **Groq API key** (user-supplied in the app).
+- For Project 02 REST API Framework: **JDK 11+** and **Maven 3.9+** to compile and run the Rest Assured tests.
+- For Project 03 BLAST Test Strategy: **Node.js 18+**, npm, Jira API credentials, and a **GROQ API key** for the React app.
 
 ## Chapter History
 
@@ -2201,6 +2365,8 @@ You can read it linearly (chapter 01 → 16) or jump straight to a project:
 `dfe2653` — chapter 02 prompt engineering with RICE-POT framework + Selenium project.
 `187a77f` — chapter 03 B.L.A.S.T. Jira to Test Plan generator.
 `f67b4f6` — chapter 04 ContentForge local content pipeline + skill output pack.
+`…` — chapters 05-16: LangFlow agents, social content, RAG (basic → advanced), QABuddy.ai, MCP, Python labs, CrewAI, Jira QA Crew, LLM eval, DeepEval, DeepEval Framework.
+`…` — chapter 17 LangChain agents for QA + E2E pipeline design, and Projects 01-03 (Test Plan Generator, REST API Framework, BLAST Test Strategy).
 
 ---
 

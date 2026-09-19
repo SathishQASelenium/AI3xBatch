@@ -1,0 +1,27 @@
+PS C:\Personal_Development\TheTestingAcademy\AI3xBatch> cd chapter_17_LangChain
+PS C:\Personal_Development\TheTestingAcademy\AI3xBatch\chapter_17_LangChain> cd src
+PS C:\Personal_Development\TheTestingAcademy\AI3xBatch\chapter_17_LangChain\src> python -m venv .venv
+PS C:\Personal_Development\TheTestingAcademy\AI3xBatch\chapter_17_LangChain\src> .venv\Scripts\activate
+(.venv) PS C:\Personal_Development\TheTestingAcademy\AI3xBatch\chapter_17_LangChain\src> pip install -U langchain langchain-google-genai langchain-groq langchain-deepseek python-dotenv requests
+Gemini keys from https://aistudio.google.com/api-keys
+or we can go with groq.com API keys
+(.venv) PS C:\Personal_Development\TheTestingAcademy\AI3xBatch\chapter_17_LangChain\src> pip install -U langchain-groq
+
+(.venv) PS C:\Personal_Development\TheTestingAcademy\AI3xBatch\chapter_17_LangChain\src> python .\chapters\001_Hello_LC.py
+After adding the Gemini key and model in .env file
+(.venv) PS C:\Personal_Development\TheTestingAcademy\AI3xBatch\chapter_17_LangChain\src> python .\chapters\002_Hello_Gemini.py
+
+Installing langchain-ollama
+(.venv) PS C:\Personal_Development\TheTestingAcademy\AI3xBatch\chapter_17_LangChain\src> pip install -U langchain-ollama
+now running it from local
+(.venv) PS C:\Personal_Development\TheTestingAcademy\AI3xBatch\chapter_17_LangChain\src> pip install -U asyncio
+(.venv) PS C:\Personal_Development\TheTestingAcademy\AI3xBatch\chapter_17_LangChain\src> python .\chapters\006_Agent_Parallel_Vs_Sequential.py
+
+(.venv) PS C:\Personal_Development\TheTestingAcademy\AI3xBatch\chapter_17_LangChain\src> pip install -U pydantic
+(.venv) PS C:\Personal_Development\TheTestingAcademy\AI3xBatch\chapter_17_LangChain\src> python .\chapters\009_Structure_output.py
+
+(.venv) PS C:\Personal_Development\TheTestingAcademy\AI3xBatch\chapter_17_LangChain\src> pip install -U playwright
+(.venv) PS C:\Personal_Development\TheTestingAcademy\AI3xBatch\chapter_17_LangChain\src> playwright install chromium 
+
+(.venv) PS C:\Personal_Development\TheTestingAcademy\AI3xBatch\chapter_17_LangChain\src> python .\chapters\010_Playwright_Agent_Orch.py
+(.venv) PS C:\Personal_Development\TheTestingAcademy\AI3xBatch\chapter_17_LangChain\src> python .\chapters\011_Playwright_Agent_OpenRouter.py
