@@ -675,6 +675,7 @@ mindmap
 │   ├── LangChain_Notes.html    Standalone animated study guide (open in a browser)
 │   ├── E2E_QA_Pipeline.md      8-step flow: JQL, RAG test plan/cases, Playwright MD, Browser Bash, RCA
 │   ├── MyNotes.txt             Setup transcript (venv, installs, run order)
+│   ├── .env.sample             Copy to .env and fill in keys (Groq/Gemini/OpenRouter/Jira)
 │   └── src/
 │       ├── chapters/           001..014 LangChain lab scripts (see Chapter 17 section)
 │       │   ├── playwright_tools.py  Shared Playwright tool wrappers (no_wait_after + settle, SLOW_MO_MS)
@@ -2179,8 +2180,10 @@ Slack MCP — the reporter agent's messages are recorded and printed, never actu
 
 **Run it:**
 ```bash
-cd chapter_17_LangChain/src
-python -m venv .venv && .venv\Scripts\activate
+cd chapter_17_LangChain
+copy .env.sample .env        # Windows — then fill in your keys
+python -m venv src/.venv && src\.venv\Scripts\activate
+cd src
 pip install -U langchain langchain-google-genai langchain-groq langchain-deepseek langchain-ollama langchain-openai python-dotenv requests pydantic playwright
 playwright install chromium
 python chapters/001_Hello_LC.py
@@ -2189,6 +2192,9 @@ python chapters/012_FULL_E2E_Playwright_Agent_Orch_OpenRouter.py
 python chapters/013_Fetch_JIRA_QA_Orch.py VWO-200 --yes
 python chapters/014_FULL_E2E_Fetch_JIRA_Local_RAG_QA_Orch.py VWO-200 --yes
 ```
+
+The `.env` file lives in `chapter_17_LangChain/` (the scripts' `load_dotenv()` walks up from
+`src/chapters/` to find it).
 
 Labs 012-014 need `OPENROUTER_LLM_API_KEY` (and `OPENROUTER_LLM_MODEL`, default
 `deepseek/deepseek-chat`) in `.env`; 013/014 also need Jira credentials (`JIRA_URL`, `JIRA_EMAIL`,
