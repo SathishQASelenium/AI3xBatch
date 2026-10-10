@@ -25,3 +25,9 @@ now running it from local
 
 (.venv) PS C:\Personal_Development\TheTestingAcademy\AI3xBatch\chapter_17_LangChain\src> python .\chapters\010_Playwright_Agent_Orch.py
 (.venv) PS C:\Personal_Development\TheTestingAcademy\AI3xBatch\chapter_17_LangChain\src> python .\chapters\011_Playwright_Agent_OpenRouter.py
+
+(.venv) PS C:\Personal_Development\TheTestingAcademy\AI3xBatch\chapter_17_LangChain\src\chapters> python .\012_FULL_E2E_Playwright_Agent_Orch_OpenRouter.py
+
+(.venv) PS C:\Personal_Development\TheTestingAcademy\AI3xBatch\chapter_17_LangChain\src\chapters> python.exe .\013_Fetch_JIRA_QA_Orch.py VWO-200 --yes
+
+(.venv) PS C:\Personal_Development\TheTestingAcademy\AI3xBatch\chapter_17_LangChain\src> python .\chapters\014_FULL_E2E_Fetch_JIRA_Local_RAG_QA_Orch.py VWO-200 --yes

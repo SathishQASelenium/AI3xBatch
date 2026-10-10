@@ -213,6 +213,9 @@ mindmap
         Parallel vs sequential agents
         Tools, multi-tool, structured output
         Playwright agent orchestration
+        Full E2E purchase flow agent (OpenRouter)
+        Jira -> test plan -> browser run (3-stage)
+        Jira -> RAG -> plan -> browser -> Slack (5-stage)
       E2E QA Pipeline design doc
         JQL to Jira stories
         RAG-backed test plan + test cases
@@ -673,8 +676,14 @@ mindmap
 │   ├── E2E_QA_Pipeline.md      8-step flow: JQL, RAG test plan/cases, Playwright MD, Browser Bash, RCA
 │   ├── MyNotes.txt             Setup transcript (venv, installs, run order)
 │   └── src/
-│       ├── chapters/           001..011 LangChain lab scripts (see Chapter 17 section)
-│       ├── playwright_tools.py  Shared Playwright tool wrappers for the agent scripts
+│       ├── chapters/           001..014 LangChain lab scripts (see Chapter 17 section)
+│       │   ├── playwright_tools.py  Shared Playwright tool wrappers (no_wait_after + settle, SLOW_MO_MS)
+│       │   ├── tta_rag.py           Local TF-IDF RAG over the team test-case library
+│       │   ├── slack_tools.py       Dummy Slack MCP tools for the reporter agent
+│       │   ├── fixtures/            Offline Jira fixtures (VWO-49 / VWO-114 / VWO-200)
+│       │   ├── rag_corpus/          tta_testcases.json — the local test-case library
+│       │   ├── test_plan_VWO-*.json Generated plan outputs from 013/014
+│       │   └── screenshots/         order_complete.png (012 run)
 │       └── screenshots/        final_state / login_success / screenshot
 │
 ├── Project_01_TestPlanGenerator/   Groq PRD -> structured test plan web app
@@ -2133,9 +2142,9 @@ venv/bin/python -m pytest tests/chatbot/test_03_chatbot_hallucination.py
 ## Chapter 17 — LangChain Agents for QA + E2E Pipeline Design
 
 `chapter_17_LangChain/` has two halves. The first is a hands-on **LangChain (Python)** study guide
-for testers — eleven runnable labs that go from "first agent" to a Playwright agent that drives a
-browser. The second is the **E2E QA pipeline design doc** that joins the earlier chapters into one
-loop.
+for testers — fourteen runnable labs that go from "first agent" to a full Jira → RAG → plan →
+browser → Slack QA pipeline. The second is the **E2E QA pipeline design doc** that joins the
+earlier chapters into one loop.
 
 ### LangChain labs (`src/chapters/`)
 
@@ -2155,8 +2164,16 @@ Ollama, or OpenRouter depending on the lab):
 | 009 | `009_Structure_output.py` | Structured output (Pydantic) instead of free-form text. |
 | 010 | `010_Playwright_Agent_Orch.py` | A Playwright agent that orchestrates browser actions. |
 | 011 | `011_Playwright_Agent_OpenRouter.py` | The same Playwright agent over OpenRouter. |
+| 012 | `012_FULL_E2E_Playwright_Agent_Orch_OpenRouter.py` | Full end-to-end purchase flow on TTACart (login → add to cart → checkout → order confirmation) driven by one agent over OpenRouter (DeepSeek). |
+| 013 | `013_Fetch_JIRA_QA_Orch.py` | 3-stage pipeline: fetch a Jira ticket (REST v3, offline fixture fallback) → typed test plan (Pydantic) → execute the automatable cases in a real Chromium. Human gate before the browser; `--yes` / `--dry-run`. |
+| 014 | `014_FULL_E2E_Fetch_JIRA_Local_RAG_QA_Orch.py` | The full 5-stage pipeline: Jira → local RAG retrieval → plan (Groq) → execute (DeepSeek) → Slack report (dummy MCP). `--no-rag` shows what grounding is worth. |
 
-`playwright_tools.py` holds the shared Playwright tool wrappers the agent scripts import.
+`playwright_tools.py` holds the shared Playwright tool wrappers the agent scripts import — clicks
+use `no_wait_after=True` plus a bounded network-idle settle so a slow navigation cannot block the
+agent or produce a false FAIL, and `SLOW_MO_MS` (default 0) lets a demo slow the browser down for
+viewing. `tta_rag.py` is a dependency-free local TF-IDF RAG over `rag_corpus/tta_testcases.json`
+that grounds the planner in the team's existing test-case library. `slack_tools.py` is a dummy
+Slack MCP — the reporter agent's messages are recorded and printed, never actually sent.
 `LangChain_Notes.html` is a standalone animated study guide covering the same ground, and
 `MyNotes.txt` is the setup transcript (venv, installs, run order).
 
@@ -2164,11 +2181,20 @@ Ollama, or OpenRouter depending on the lab):
 ```bash
 cd chapter_17_LangChain/src
 python -m venv .venv && .venv\Scripts\activate
-pip install -U langchain langchain-google-genai langchain-groq langchain-deepseek langchain-ollama python-dotenv requests playwright
+pip install -U langchain langchain-google-genai langchain-groq langchain-deepseek langchain-ollama langchain-openai python-dotenv requests pydantic playwright
 playwright install chromium
 python chapters/001_Hello_LC.py
 python chapters/011_Playwright_Agent_OpenRouter.py
+python chapters/012_FULL_E2E_Playwright_Agent_Orch_OpenRouter.py
+python chapters/013_Fetch_JIRA_QA_Orch.py VWO-200 --yes
+python chapters/014_FULL_E2E_Fetch_JIRA_Local_RAG_QA_Orch.py VWO-200 --yes
 ```
+
+Labs 012-014 need `OPENROUTER_LLM_API_KEY` (and `OPENROUTER_LLM_MODEL`, default
+`deepseek/deepseek-chat`) in `.env`; 013/014 also need Jira credentials (`JIRA_URL`, `JIRA_EMAIL`,
+`JIRA_API_TOKEN`) — 013 falls back to the bundled `fixtures/` when Jira is unreachable, and 014
+uses `TARGET_APP_URL` / `TARGET_APP_USER` / `TARGET_APP_PASS` (defaults point at the TTACart demo
+app) plus `SLACK_CHANNEL` for the dummy reporter.
 
 ### E2E QA Pipeline design (`E2E_QA_Pipeline.md`)
 
@@ -2191,6 +2217,8 @@ written flow, not runnable code; Chapter 13 implements steps 1-5 of it.
 
 The point of writing it down: every box maps to a chapter you have already built (RAG → 07/08,
 CrewAI → 12/13, flaky analysis → 05), so the "pipeline" is integration work, not new invention.
+Labs 013 and 014 are runnable slices of this design: 013 covers steps 1-4 (fetch → plan → execute),
+and 014 adds the RAG grounding from step 3/4 plus a reporting agent on top.
 
 ---
 
@@ -2326,6 +2354,8 @@ You can read it linearly (chapter 01 → 16) or jump straight to a project:
 - **"DeepEval says PASSED but pytest says FAILED on Windows."** → `chapter_15_DeepEval/README.md` (the `portalocker[win32]` trap).
 - **"I want the big picture — JQL to dashboard — before building any of it."** → `chapter_17_LangChain/E2E_QA_Pipeline.md`.
 - **"I want to learn LangChain agents for QA, from first agent to a Playwright agent."** → `chapter_17_LangChain/src/chapters/`.
+- **"I want a Jira ticket turned into a test plan and run in a real browser."** → `chapter_17_LangChain/src/chapters/013_Fetch_JIRA_QA_Orch.py`.
+- **"I want the full loop — Jira, RAG-grounded plan, browser run, Slack report."** → `chapter_17_LangChain/src/chapters/014_FULL_E2E_Fetch_JIRA_Local_RAG_QA_Orch.py`.
 - **"I want a PRD turned into a structured test plan by Groq."** → `Project_01_TestPlanGenerator/`.
 - **"I want a layered Rest Assured API framework with CI/CD, generated from a prompt."** → `Project_02_REST_API_Framework/`.
 - **"I want a Jira ID turned into a test strategy via GROQ."** → `Project_03_BLAST_FW_TEST_STRATEGY/` (reference docs) and the `blast-test-strategy/` React app it points to.
@@ -2354,7 +2384,7 @@ You can read it linearly (chapter 01 → 16) or jump straight to a project:
 - For Chapter 14 LLM Eval: reading only — no install.
 - For Chapter 16 DeepEval Framework: **Python 3.11+**, `pip install -r chapter_16_DeepEval_Framework/03_DeepEvalFramework/requirements.txt` (deepeval, pytest, fastapi, uvicorn, python-dotenv), a **Groq API key** for the judge, and **Ollama** with `nomic-embed-text` pulled for the RAG Explorer's embeddings. The two apps under test each have their own `requirements.txt` (the chatbot and RAG Explorer both need the `groq` package); Subsystem A and Subsystem B each need their own `.env`, and the dashboard needs the judge key. The static showcase needs the **Vercel CLI** (`vercel deploy`) if you want to ship it.
 - For the E2E Pipeline design doc (Chapter 17): reading only — no install.
-- For Chapter 17 LangChain labs: **Python 3.10+**, `pip install langchain langchain-google-genai langchain-groq langchain-deepseek langchain-ollama python-dotenv requests playwright`, a provider key in `.env` (Gemini/Groq/OpenRouter) or local **Ollama**, and `playwright install chromium` for the Playwright agent labs.
+- For Chapter 17 LangChain labs: **Python 3.10+**, `pip install langchain langchain-google-genai langchain-groq langchain-deepseek langchain-ollama langchain-openai python-dotenv requests pydantic playwright`, a provider key in `.env` (Gemini/Groq/OpenRouter) or local **Ollama**, and `playwright install chromium` for the Playwright agent labs. Labs 012-014 additionally need `OPENROUTER_LLM_API_KEY` (and optionally `OPENROUTER_LLM_MODEL`, default `deepseek/deepseek-chat`); 013/014 need Jira credentials (`JIRA_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`) — 013 falls back to bundled `fixtures/` when Jira is unreachable; 014 uses `TARGET_APP_URL` / `TARGET_APP_USER` / `TARGET_APP_PASS` (defaults point at the TTACart demo app) and `SLACK_CHANNEL` for the dummy reporter. `SLOW_MO_MS` (default 0) slows the browser for demos.
 - For Project 01 Test Plan Generator: a browser and a **Groq API key** (user-supplied in the app).
 - For Project 02 REST API Framework: **JDK 11+** and **Maven 3.9+** to compile and run the Rest Assured tests.
 - For Project 03 BLAST Test Strategy: **Node.js 18+**, npm, Jira API credentials, and a **GROQ API key** for the React app.

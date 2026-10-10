@@ -1,0 +1,94 @@
+{
+  "ticket_key": "VWO-49",
+  "scope": "Validate the presence and functionality of new login options (SSO and Passkey) on the VWO login page. The target app (https://app.thetestingacademy.com/playwright/ttacart/) does not contain these options, so automation cannot be performed against the actual UI.",
+  "risks": [
+    "The target application lacks the SSO and Passkey UI elements, making automated verification impossible.",
+    "Any manual verification would require a different environment that implements the new authentication flows."
+  ],
+  "test_cases": [
+    {
+      "id": "TC-01",
+      "title": "UI Visibility of SSO and Passkey buttons",
+      "priority": "P1",
+      "steps": [
+        "Navigate to https://app.thetestingacademy.com/playwright/ttacart/.",
+        "Click the 'Login' link to open the login page.",
+        "Observe the login page for buttons labeled 'Sign in using SSO' and 'Sign in with Passkey' positioned below any 'Sign in with Google' button."
+      ],
+      "expected_result": "Both 'Sign in using SSO' and 'Sign in with Passkey' buttons are visible and displayed below the 'Sign in with Google' option.",
+      "automatable": false,
+      "reason_if_not": "The target app's login page only provides standard username/password fields and does not include SSO or Passkey buttons."
+    },
+    {
+      "id": "TC-02",
+      "title": "Successful SSO login flow",
+      "priority": "P1",
+      "steps": [
+        "Navigate to the login page.",
+        "Click the 'Sign in using SSO' button.",
+        "Enter valid SSO credentials in the presented SSO provider dialog.",
+        "Submit the credentials.",
+        "Verify that the user is redirected to the dashboard page."
+      ],
+      "expected_result": "User is authenticated via SSO and lands on the dashboard.",
+      "automatable": false,
+      "reason_if_not": "No SSO integration exists in the target application; the button and provider dialog are absent."
+    },
+    {
+      "id": "TC-03",
+      "title": "SSO login error handling for invalid credentials",
+      "priority": "P2",
+      "steps": [
+        "Navigate to the login page.",
+        "Click the 'Sign in using SSO' button.",
+        "Enter invalid SSO credentials.",
+        "Submit the credentials.",
+        "Observe the error message displayed."
+      ],
+      "expected_result": "An appropriate error message (e.g., 'Invalid credentials') is shown and the user remains on the login page.",
+      "automatable": false,
+      "reason_if_not": "SSO flow is not implemented in the target app."
+    },
+    {
+      "id": "TC-04",
+      "title": "Successful Passkey login flow",
+      "priority": "P1",
+      "steps": [
+        "Navigate to the login page.",
+        "Click the 'Sign in with Passkey' button.",
+        "When prompted, select a registered passkey from the browser/device UI.",
+        "Confirm the authentication.",
+        "Verify redirection to the dashboard."
+      ],
+      "expected_result": "User is logged in via Passkey and lands on the dashboard.",
+      "automatable": false,
+      "reason_if_not": "Passkey (WebAuthn) login is not present in the target application."
+    },
+    {
+      "id": "TC-05",
+      "title": "Passkey fallback when no registered passkey is available",
+      "priority": "P2",
+      "steps": [
+        "Navigate to the login page.",
+        "Click the 'Sign in with Passkey' button.",
+        "When the passkey selection dialog shows no registered keys, observe the fallback or guidance message."
+      ],
+      "expected_result": "A message guiding the user to register a passkey or use an alternative login method is displayed.",
+      "automatable": false,
+      "reason_if_not": "Passkey UI and fallback logic are not implemented in the target app."
+    },
+    {
+      "id": "TC-06",
+      "title": "Error handling for unsupported browsers/devices for Passkey",
+      "priority": "P2",
+      "steps": [
+        "Open the login page using a browser that does not support WebAuthn (e.g., older version of Internet Explorer).",
+        "Click the 'Sign in with Passkey' button.",
+        "Observe the error or informational message presented."
+      ],
+      "expected_result": "A clear message indicating that Passkey login is not supported on the current browser/device is shown.",
+      "automatable": false,
+      "reason_if_not": "The target application does not contain Passkey functionality, so this scenario cannot be automated."
+    }
+  ]
+}

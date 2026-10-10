@@ -1,0 +1,140 @@
+{
+  "ticket_key": "VWO-200",
+  "scope": "End-to-end purchase flow for TTACart: login, add to cart, cart review, checkout, and order confirmation.",
+  "risks": [
+    "Flaky network may cause time‑outs on page loads.",
+    "UI text or element selectors could change, breaking automation.",
+    "Test data (cart contents) is reset per run; failures may occur if previous steps do not clean up."
+  ],
+  "coverage_gap": "The library already contains login (valid/invalid) and add‑to‑cart badge tests, but lacks coverage for cart review, checkout information entry, order total verification, and final order confirmation. No full end‑to‑end purchase flow test exists.",
+  "test_cases": [
+    {
+      "id": "TC-001",
+      "title": "Login with valid credentials redirects to products page",
+      "priority": "P0",
+      "steps": [
+        "Open https://app.thetestingacademy.com/playwright/ttacart/",
+        "Enter username standard_user",
+        "Enter password tta_secret",
+        "Click Login button",
+        "Verify the URL is https://app.thetestingacademy.com/playwright/ttacart/inventory",
+        "Verify the Products heading is visible"
+      ],
+      "expected_result": "User lands on the inventory page and sees the product list.",
+      "automatable": true,
+      "reason_if_not": "",
+      "rag_relation": "duplicate",
+      "related_existing_ids": [
+        "TTA-001"
+      ]
+    },
+    {
+      "id": "TC-002",
+      "title": "Login with invalid credentials shows error message",
+      "priority": "P0",
+      "steps": [
+        "Open https://app.thetestingacademy.com/playwright/ttacart/",
+        "Enter username standard_user",
+        "Enter password wrong_password",
+        "Click Login button",
+        "Verify the error alert text is \"Epic sadface: Username and password do not match any user in this service\"",
+        "Verify the URL remains https://app.thetestingacademy.com/playwright/ttacart/"
+      ],
+      "expected_result": "Error message is displayed and the user stays on the login page.",
+      "automatable": true,
+      "reason_if_not": "",
+      "rag_relation": "duplicate",
+      "related_existing_ids": [
+        "TTA-002"
+      ]
+    },
+    {
+      "id": "TC-003",
+      "title": "Add a product to cart updates cart badge",
+      "priority": "P0",
+      "steps": [
+        "Login with valid credentials (see TC-001)",
+        "On the inventory page, click \"Add to cart\" on the first product",
+        "Read the cart badge in the header"
+      ],
+      "expected_result": "The cart badge shows the number 1.",
+      "automatable": true,
+      "reason_if_not": "",
+      "rag_relation": "duplicate",
+      "related_existing_ids": [
+        "TTA-010"
+      ]
+    },
+    {
+      "id": "TC-004",
+      "title": "Cart review shows added product with quantity 1",
+      "priority": "P1",
+      "steps": [
+        "Login with valid credentials (see TC-001)",
+        "Add the first product to the cart (see TC-003)",
+        "Click the cart icon to navigate to https://app.thetestingacademy.com/playwright/ttacart/cart",
+        "Verify the product name appears in the cart list",
+        "Verify the quantity displayed for that product is 1"
+      ],
+      "expected_result": "The cart lists the selected product with a quantity of 1.",
+      "automatable": true,
+      "reason_if_not": "",
+      "rag_relation": "new",
+      "related_existing_ids": []
+    },
+    {
+      "id": "TC-005",
+      "title": "Checkout information entry navigates to overview page",
+      "priority": "P1",
+      "steps": [
+        "Login and add a product to the cart (see TC-001 and TC-003)",
+        "From the cart page, click the \"Checkout\" button",
+        "On the checkout-step-one page, enter First Name \"John\"",
+        "Enter Last Name \"Doe\"",
+        "Enter Zip/Postal Code \"12345\"",
+        "Click the \"Continue\" button",
+        "Verify the URL is https://app.thetestingacademy.com/playwright/ttacart/checkout-step-two",
+        "Verify the Checkout Overview page is displayed"
+      ],
+      "expected_result": "User lands on the Checkout Overview page after providing required information.",
+      "automatable": true,
+      "reason_if_not": "",
+      "rag_relation": "new",
+      "related_existing_ids": []
+    },
+    {
+      "id": "TC-006",
+      "title": "Order total equals item total plus tax",
+      "priority": "P2",
+      "steps": [
+        "Complete the checkout flow up to the Checkout Overview page (see TC-005)",
+        "Read the \"Item total\" value displayed",
+        "Read the \"Tax\" value displayed",
+        "Read the \"Total\" value displayed",
+        "Calculate Item total + Tax",
+        "Verify the calculated sum equals the displayed Total"
+      ],
+      "expected_result": "The displayed Total matches the sum of Item total and Tax.",
+      "automatable": true,
+      "reason_if_not": "",
+      "rag_relation": "new",
+      "related_existing_ids": []
+    },
+    {
+      "id": "TC-007",
+      "title": "Order confirmation displayed after finishing checkout",
+      "priority": "P1",
+      "steps": [
+        "Complete the checkout flow up to the Checkout Overview page (see TC-005)",
+        "Click the \"Finish\" button",
+        "Verify the URL is https://app.thetestingacademy.com/playwright/ttacart/checkout-complete",
+        "Verify the heading text \"Thank you for your order!\" is visible"
+      ],
+      "expected_result": "The order confirmation page with the thank‑you heading is shown.",
+      "automatable": true,
+      "reason_if_not": "",
+      "rag_relation": "new",
+      "related_existing_ids": []
+    }
+  ]
+}

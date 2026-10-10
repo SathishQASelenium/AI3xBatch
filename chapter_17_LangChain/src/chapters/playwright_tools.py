@@ -49,6 +49,20 @@ def _record_failed_request(request) -> None:
     _failed_requests.append(f"{request.method} {request.url} -> {request.failure or 'failed'}")
 
 
+async def _settle(timeout_ms: int = 5000) -> None:
+    """Give the page a bounded moment to react to an action.
+
+    Clicks use no_wait_after=True so a slow navigation cannot block the agent,
+    but that means the DOM may not have updated by the time the next snapshot
+    runs - the agent then sees stale state and reports a false FAIL. Wait for
+    the network to go quiet, capped so a hanging request cannot stall the run.
+    """
+    try:
+        await _page.wait_for_load_state("networkidle", timeout=timeout_ms)
+    except PlaywrightTimeoutError:
+        pass
+
+
 def _needs_page(fn):
     """Guard + error funnel, so 20 tools do not repeat the same 6 lines.
 
@@ -81,7 +95,11 @@ async def launch_browser(headless: bool = False) -> str:
     _console_errors.clear()
     _failed_requests.clear()
     _playwright = await async_playwright().start()
-    _browser = await _playwright.chromium.launch(headless=headless, slow_mo=700)
+    # slow_mo adds a fixed delay to EVERY action. 700ms x dozens of actions per
+    # run is minutes of pure waiting, so default to 0 and let a demo opt in via
+    # SLOW_MO_MS when a human wants to watch the browser.
+    slow_mo = int(os.getenv("SLOW_MO_MS", "0"))
+    _browser = await _playwright.chromium.launch(headless=headless, slow_mo=slow_mo)
     _context = await _browser.new_context()
     _page = await _context.new_page()
     # 30s (the default) is a long time for an agent to sit blocked on a typo.
@@ -182,8 +200,13 @@ async def type_text(selector: str, text: str) -> str:
 @tool
 @_needs_page
 async def click_element(selector: str) -> str:
-    """Click on an element found by CSS selector."""
-    await _page.locator(selector).click()
+    """Click on an element found by CSS selector.
+
+    no_wait_after=True: return as soon as the click is dispatched instead of
+    blocking on navigation. Verify the result with get_page_info.
+    """
+    await _page.locator(selector).click(no_wait_after=True)
+    await _settle()
     return f"Clicked on {selector}"
 
 
@@ -271,16 +294,27 @@ async def click_by_role(role: str, name: str) -> str:
 
     Prefer this over click_element: it survives CSS and markup changes, and the
     role/name pairs come straight out of snapshot_page.
+
+    no_wait_after=True: return as soon as the click is dispatched instead of
+    blocking while Playwright waits for a navigation to settle. A click that
+    triggers a slow or hanging navigation would otherwise block the agent for
+    the full timeout. Verify the result with get_page_info / wait_for_element.
     """
-    await _page.get_by_role(role, name=name).first.click()
+    await _page.get_by_role(role, name=name).first.click(no_wait_after=True)
+    await _settle()
     return f'Clicked {role} named "{name}"'
 
 
 @tool
 @_needs_page
 async def click_by_text(text: str) -> str:
-    """Click the first element containing this visible text. Use for links and cards."""
-    await _page.get_by_text(text).first.click()
+    """Click the first element containing this visible text. Use for links and cards.
+
+    no_wait_after=True: return as soon as the click is dispatched instead of
+    blocking on navigation. Verify the result with get_page_info.
+    """
+    await _page.get_by_text(text).first.click(no_wait_after=True)
+    await _settle()
     return f'Clicked element containing text "{text}"'
 
 

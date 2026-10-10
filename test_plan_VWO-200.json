@@ -1,0 +1,123 @@
+{
+  "ticket_key": "VWO-200",
+  "scope": "End‑to‑end purchase flow for TTACart: login, add to cart, cart review, checkout and order confirmation",
+  "risks": [
+    "Flaky price calculations may cause total verification to fail intermittently",
+    "UI element selectors may change across releases",
+    "Network latency could delay page navigation leading to timeout"
+  ],
+  "coverage_gap": "Existing library lacks positive tests for cart review (product quantity), checkout information entry, order total calculation verification, and successful order confirmation flow after checkout. Only negative navigation to checkout‑complete is covered (TTA-018).",
+  "test_cases": [
+    {
+      "id": "VWO-200-TC01",
+      "title": "Login with valid credentials redirects to products page",
+      "priority": "P0",
+      "steps": [
+        "Open https://app.thetestingacademy.com/playwright/ttacart/",
+        "Enter username standard_user",
+        "Enter password tta_secret",
+        "Click Login button"
+      ],
+      "expected_result": "User lands on /playwright/ttacart/inventory and the Products heading is visible",
+      "automatable": true,
+      "reason_if_not": "",
+      "rag_relation": "duplicate",
+      "related_existing_ids": [
+        "TTA-001"
+      ]
+    },
+    {
+      "id": "VWO-200-TC02",
+      "title": "Login with invalid credentials shows error message",
+      "priority": "P0",
+      "steps": [
+        "Open https://app.thetestingacademy.com/playwright/ttacart/",
+        "Enter username standard_user",
+        "Enter password wrong_password",
+        "Click Login button"
+      ],
+      "expected_result": "Error alert reads 'Epic sadface: Username and password do not match any user in this service' and URL remains on the login page",
+      "automatable": true,
+      "reason_if_not": "",
+      "rag_relation": "duplicate",
+      "related_existing_ids": [
+        "TTA-002"
+      ]
+    },
+    {
+      "id": "VWO-200-TC03",
+      "title": "Add first product to cart updates cart badge to 1",
+      "priority": "P0",
+      "steps": [
+        "Login as standard_user (valid credentials)",
+        "On the inventory page click the \"Add to cart\" button for the first product",
+        "Read the cart badge in the header"
+      ],
+      "expected_result": "The cart badge shows \"1\"",
+      "automatable": true,
+      "reason_if_not": "",
+      "rag_relation": "duplicate",
+      "related_existing_ids": [
+        "TTA-010"
+      ]
+    },
+    {
+      "id": "VWO-200-TC04",
+      "title": "Cart review displays added product with quantity 1",
+      "priority": "P1",
+      "steps": [
+        "Login as standard_user",
+        "Add the first product to the cart",
+        "Click the cart icon to navigate to /playwright/ttacart/cart"
+      ],
+      "expected_result": "The product appears in the cart list with a quantity of 1",
+      "automatable": true,
+      "reason_if_not": "",
+      "rag_relation": "new",
+      "related_existing_ids": []
+    },
+    {
+      "id": "VWO-200-TC05",
+      "title": "Checkout information entry leads to overview page",
+      "priority": "P0",
+      "steps": [
+        "From the cart page click the \"Checkout\" button",
+        "On /playwright/ttacart/checkout-step-one enter First Name John, Last Name Doe, Zip/Postal Code 12345",
+        "Click the \"Continue\" button"
+      ],
+      "expected_result": "User is redirected to /playwright/ttacart/checkout-step-two (Checkout Overview)",
+      "automatable": true,
+      "reason_if_not": "",
+      "rag_relation": "new",
+      "related_existing_ids": []
+    },
+    {
+      "id": "VWO-200-TC06",
+      "title": "Order total equals item total plus tax on overview page",
+      "priority": "P1",
+      "steps": [
+        "On the Checkout Overview page read the displayed Item total value",
+        "Read the displayed Tax value",
+        "Read the displayed Total value"
+      ],
+      "expected_result": "Item total plus Tax equals the displayed Total",
+      "automatable": true,
+      "reason_if_not": "",
+      "rag_relation": "new",
+      "related_existing_ids": []
+    },
+    {
+      "id": "VWO-200-TC07",
+      "title": "Finish checkout shows order confirmation heading",
+      "priority": "P0",
+      "steps": [
+        "On the Checkout Overview page click the \"Finish\" button"
+      ],
+      "expected_result": "URL changes to /playwright/ttacart/checkout-complete and the heading \"Thank you for your order!\" is visible",
+      "automatable": true,
+      "reason_if_not": "",
+      "rag_relation": "new",
+      "related_existing_ids": []
+    }
+  ]
+}
