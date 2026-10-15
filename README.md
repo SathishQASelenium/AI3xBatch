@@ -222,6 +222,16 @@ mindmap
         Test cases to Playwright flow MD
         Browser Bash execution to result.json
         Flakiness + RCA analysis to dashboard
+    Ch 18 - LangGraph
+      State as a TypedDict - nodes return partial updates
+      Nodes, edges, START / END
+      Conditional edges - the router is where an agent decides
+      Loops - a backwards edge retries a failed test
+      Playwright Flaky Finder project
+        pytest drives Chromium, writes JUnit XML
+        Reads the report, not the exit code
+        Retries only the tests that failed
+        FLAKY vs REAL FAILURE verdict
     Project 01 - Test Plan Generator
       Groq PRD -> test plan
       Anti-hallucination engine
@@ -686,6 +696,18 @@ mindmap
 │       │   ├── test_plan_VWO-*.json Generated plan outputs from 013/014
 │       │   └── screenshots/         order_complete.png (012 run)
 │       └── screenshots/        final_state / login_success / screenshot
+│
+├── chapter_18_LangGraph/       Graph-based agents: state, edges, conditional routing, loops
+│   ├── MyNotes.md              Setup transcript - venv, installs, run order
+│   └── src/
+│       ├── 001_Hello_Graph.py           One node between START and END - the minimal graph
+│       ├── 002_Linear_Pipeline.py       Three nodes in a row (setup -> execute -> teardown)
+│       ├── 003_Conditional_Edge.py      Router forks passed/failed/flaky to the right node
+│       ├── 004_Loop_Retry.py            Conditional edge pointing back - the retry loop
+│       ├── Project_PW_FlakyFinder.py    Real Playwright tests + JUnit XML -> FLAKY vs REAL FAILURE
+│       ├── Obective_PWFlakyFinder.md    The project brief (flow + sequence + state diagrams)
+│       ├── report.xml                   Sample JUnit XML the graph reads
+│       └── tests/test_login.py          Two TTACart tests - one stable pass, one deliberate fail
 │
 ├── Project_01_TestPlanGenerator/   Groq PRD -> structured test plan web app
 │   ├── README.md · index.html
@@ -2228,6 +2250,84 @@ and 014 adds the RAG grounding from step 3/4 plus a reporting agent on top.
 
 ---
 
+## Chapter 18 — LangGraph
+
+`chapter_18_LangGraph/` introduces **LangGraph** — the graph-based way to build agents. A workflow is
+a set of **nodes** (plain functions) wired by **edges**, and the "agent" is the **router** that
+decides which edge to take. Four runnable labs build up from a single node to a real retry loop
+around Playwright tests.
+
+**The mental model:** state is a `TypedDict` (the backpack); each node is a plain function that
+receives it and returns **only the keys it changed** — LangGraph merges the rest. `START` and `END`
+are the entry and exit. A plain `add_edge` means "always go here next"; `add_conditional_edges` is
+"call this router function and go wherever it points" — and that router is where an agent makes
+decisions. Point a conditional edge back at an earlier node and you have a **loop**.
+
+| # | Script | What it shows |
+|---|--------|---------------|
+| 001 | `001_Hello_Graph.py` | The smallest possible graph — one node between `START` and `END`, a typed state, and a node returning a partial update that gets merged in. |
+| 002 | `002_Linear_Pipeline.py` | Three nodes in a row mirroring a test's *setup → execute → teardown*; `stream_mode="updates"` prints exactly what each node changed, step by step. |
+| 003 | `003_Conditional_Edge.py` | The fork: `add_conditional_edges(source, router, destinations)` routes a test result (`passed`/`failed`/`flaky`) to `log_pass`, `file_bug`, or `quarantine`. |
+| 004 | `004_Loop_Retry.py` | The loop — a conditional edge pointing back at an earlier node, with `MAX_ATTEMPTS`. Scripted outcomes keep the demo repeatable and yield `FLAKY` / `STABLE PASS` / `REAL FAILURE` verdicts. |
+
+Every lab ends by printing `app.get_graph().draw_mermaid()` — paste the output into
+[mermaid.live](https://mermaid.live) to see the graph.
+
+### The project — Playwright Flaky Finder (`Project_PW_FlakyFinder.py`)
+
+Lab 004 scripts its outcomes so the demo is repeatable; the project runs the **real thing**. `pytest`
+drives Chromium against [TTACart](https://app.thetestingacademy.com/playwright/ttacart/), writes a
+JUnit XML report, and the graph reads that report to decide whether to rerun:
+
+```
+run_tests ──► read_report ──► should_retry? ──(failures left)──► run_tests
+                                             └──(done)──────────► summarise
+```
+
+- A red test alone cannot tell you *what kind* of broken it is. Fail-then-pass-on-rerun is **flaky**
+  (fix the test); fail-every-time is a **real failure** (fix the app). One run is never enough — the
+  graph encodes the rule for when to run again.
+- **The report is the only evidence.** `run_tests` deliberately ignores pytest's exit code;
+  `read_report` parses the JUnit XML instead. That is the difference between an agent reading a
+  report and a shell script checking `$?`.
+- **Retries re-run only what failed** — attempt 2 runs just the failed test id, not the whole file.
+- The two tests live in `src/tests/test_login.py`: `test_valid_login` passes, and
+  `test_invalid_login` is **deliberately broken** (it asserts a successful landing after a bad login)
+  so the `REAL FAILURE` branch is always reachable in a demo. Point it at something genuinely
+  intermittent and you see `FLAKY` instead.
+- `Obective_PWFlakyFinder.md` is the project brief, with the flow, sequence, and state diagrams.
+
+**Why a QA engineer should care:** this is the same flaky-vs-real-failure problem Chapter 05 solves
+with a LangFlow agent, but here it is ~120 lines of plain Python with no LLM in it. The graph *is*
+the agent loop — swap `read_report` for an LLM node later and nothing else changes.
+
+**Run the labs and the project:**
+```bash
+cd chapter_18_LangGraph/src
+python -m venv .venv
+.venv\Scripts\activate               # Windows; Linux/macOS: source .venv/bin/activate
+pip install -U langgraph
+
+python 001_Hello_Graph.py
+python 002_Linear_Pipeline.py
+python 003_Conditional_Edge.py
+python 004_Loop_Retry.py
+
+# the Playwright project needs two more packages + a browser
+pip install pytest pytest-playwright
+python -m playwright install chromium
+python Project_PW_FlakyFinder.py
+```
+
+`HEADED = True` watches the browser, `SLOW_MO_MS = 600` makes it followable, and
+`MAX_ATTEMPTS = 2` (one run + one retry) is the cap. `Project_PW_FlakyFinder.py` points `PYTHON` at
+the venv beside the script (`src/.venv/Scripts/python.exe` on Windows), so run it with the project's
+own interpreter rather than a global one. On the author's machine the venv must be entered as
+`.venv/bin/python3.13`, **not** `.venv/bin/python` — the bare `python` there is an Anaconda 3.12 that
+cannot see the 3.13 site-packages where pytest lives.
+
+---
+
 ## Project 01 — Test Plan Generator
 
 `Project_01_TestPlanGenerator/` is an AI-powered web app that turns a **Product Requirement
@@ -2322,7 +2422,7 @@ code no longer shows:
 
 ## How to Use This Repo
 
-You can read it linearly (chapter 01 → 16) or jump straight to a project:
+You can read it linearly (chapter 01 → 18) or jump straight to a project:
 
 - **"I want better test cases now."** → `chapter_02_Prompt_Eng/templates/01_TestCaseGeneration_Prompt.md` or `02_TestCases_from_prd`.
 - **"I want to write tests from a PDF/API doc."** → `chapter_02_Prompt_Eng/Project1_TC_Gen/`.
@@ -2362,6 +2462,9 @@ You can read it linearly (chapter 01 → 16) or jump straight to a project:
 - **"I want to learn LangChain agents for QA, from first agent to a Playwright agent."** → `chapter_17_LangChain/src/chapters/`.
 - **"I want a Jira ticket turned into a test plan and run in a real browser."** → `chapter_17_LangChain/src/chapters/013_Fetch_JIRA_QA_Orch.py`.
 - **"I want the full loop — Jira, RAG-grounded plan, browser run, Slack report."** → `chapter_17_LangChain/src/chapters/014_FULL_E2E_Fetch_JIRA_Local_RAG_QA_Orch.py`.
+- **"I want to learn LangGraph — state, conditional edges, and loops — from scratch."** → `chapter_18_LangGraph/src/001_Hello_Graph.py` → `004_Loop_Retry.py`.
+- **"I want to tell a flaky test from a genuinely broken one, automatically."** → `chapter_18_LangGraph/src/Project_PW_FlakyFinder.py`.
+- **"I want to see an agent that reads a test report instead of checking the exit code."** → `chapter_18_LangGraph/src/Project_PW_FlakyFinder.py` (`read_report`).
 - **"I want a PRD turned into a structured test plan by Groq."** → `Project_01_TestPlanGenerator/`.
 - **"I want a layered Rest Assured API framework with CI/CD, generated from a prompt."** → `Project_02_REST_API_Framework/`.
 - **"I want a Jira ID turned into a test strategy via GROQ."** → `Project_03_BLAST_FW_TEST_STRATEGY/` (reference docs) and the `blast-test-strategy/` React app it points to.
@@ -2391,6 +2494,7 @@ You can read it linearly (chapter 01 → 16) or jump straight to a project:
 - For Chapter 16 DeepEval Framework: **Python 3.11+**, `pip install -r chapter_16_DeepEval_Framework/03_DeepEvalFramework/requirements.txt` (deepeval, pytest, fastapi, uvicorn, python-dotenv), a **Groq API key** for the judge, and **Ollama** with `nomic-embed-text` pulled for the RAG Explorer's embeddings. The two apps under test each have their own `requirements.txt` (the chatbot and RAG Explorer both need the `groq` package); Subsystem A and Subsystem B each need their own `.env`, and the dashboard needs the judge key. The static showcase needs the **Vercel CLI** (`vercel deploy`) if you want to ship it.
 - For the E2E Pipeline design doc (Chapter 17): reading only — no install.
 - For Chapter 17 LangChain labs: **Python 3.10+**, `pip install langchain langchain-google-genai langchain-groq langchain-deepseek langchain-ollama langchain-openai python-dotenv requests pydantic playwright`, a provider key in `.env` (Gemini/Groq/OpenRouter) or local **Ollama**, and `playwright install chromium` for the Playwright agent labs. Labs 012-014 additionally need `OPENROUTER_LLM_API_KEY` (and optionally `OPENROUTER_LLM_MODEL`, default `deepseek/deepseek-chat`); 013/014 need Jira credentials (`JIRA_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`) — 013 falls back to bundled `fixtures/` when Jira is unreachable; 014 uses `TARGET_APP_URL` / `TARGET_APP_USER` / `TARGET_APP_PASS` (defaults point at the TTACart demo app) and `SLACK_CHANNEL` for the dummy reporter. `SLOW_MO_MS` (default 0) slows the browser for demos.
+- For Chapter 18 LangGraph: **Python 3.10+** and `pip install -U langgraph`. The Playwright Flaky Finder project additionally needs `pip install pytest pytest-playwright` and `python -m playwright install chromium`. No API keys and no LLM — the labs and the project are deterministic Python. Run the scripts with the venv beside them (`chapter_18_LangGraph/src/.venv`), not a global interpreter; on the author's machine that is `.venv/bin/python3.13` (not `.venv/bin/python`, an Anaconda 3.12 without pytest).
 - For Project 01 Test Plan Generator: a browser and a **Groq API key** (user-supplied in the app).
 - For Project 02 REST API Framework: **JDK 11+** and **Maven 3.9+** to compile and run the Rest Assured tests.
 - For Project 03 BLAST Test Strategy: **Node.js 18+**, npm, Jira API credentials, and a **GROQ API key** for the React app.
@@ -2403,6 +2507,7 @@ You can read it linearly (chapter 01 → 16) or jump straight to a project:
 `f67b4f6` — chapter 04 ContentForge local content pipeline + skill output pack.
 `…` — chapters 05-16: LangFlow agents, social content, RAG (basic → advanced), QABuddy.ai, MCP, Python labs, CrewAI, Jira QA Crew, LLM eval, DeepEval, DeepEval Framework.
 `…` — chapter 17 LangChain agents for QA + E2E pipeline design, and Projects 01-03 (Test Plan Generator, REST API Framework, BLAST Test Strategy).
+`…` — chapter 18 LangGraph: state/edges/conditional routing/loops labs + the Playwright Flaky Finder project.
 
 ---
 

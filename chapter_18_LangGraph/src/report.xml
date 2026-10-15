@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="11.007" timestamp="2026-10-15T08:17:01.642834+05:30" hostname="DESKTOP-QI9R7M3"><testcase classname="src.tests.test_login" name="test_invalid_login[chromium]" time="10.566"><failure message="AssertionError: Page URL expected to be 're.compile('/inventory$')'&#10;Actual value: https://app.thetestingacademy.com/playwright/ttacart/ &#10;Call log:&#10;  - Expect &quot;to_have_url&quot; with timeout 5000ms&#10;    13 × locator resolved to &lt;html lang=&quot;en&quot;&gt;…&lt;/html&gt;&#10;       - unexpected value &quot;https://app.thetestingacademy.com/playwright/ttacart/&quot;&#10;&#10;Aria snapshot:&#10;- heading &quot;TTACart&quot; [level=1]&#10;- textbox &quot;Username&quot;: not_a_real_user&#10;- textbox &quot;Password&quot;: tta_secret&#10;- alert: &quot;Epic sadface: Username and password do not match any user in this service&quot;&#10;- button &quot;Login&quot;&#10;- heading &quot;Accepted usernames are:&quot; [level=4]&#10;- paragraph: standard_user locked_out_user problem_user performance_glitch_user error_user visual_user&#10;- heading &quot;Password for all users:&quot; [level=4]&#10;- paragraph: tta_secret">page = &lt;Page url='https://app.thetestingacademy.com/playwright/ttacart/'&gt;
+
+    def test_invalid_login(page: Page) -&gt; None:
+        login(page, "not_a_real_user")
+&gt;       expect(page).to_have_url(INVENTORY)
+E       AssertionError: Page URL expected to be 're.compile('/inventory$')'
+E       Actual value: https://app.thetestingacademy.com/playwright/ttacart/ 
+E       Call log:
+E         - Expect "to_have_url" with timeout 5000ms
+E           13 × locator resolved to &lt;html lang="en"&gt;…&lt;/html&gt;
+E              - unexpected value "https://app.thetestingacademy.com/playwright/ttacart/"
+E       
+E       Aria snapshot:
+E       - heading "TTACart" [level=1]
+E       - textbox "Username": not_a_real_user
+E       - textbox "Password": tta_secret
+E       - alert: "Epic sadface: Username and password do not match any user in this service"
+E       - button "Login"
+E       - heading "Accepted usernames are:" [level=4]
+E       - paragraph: standard_user locked_out_user problem_user performance_glitch_user error_user visual_user
+E       - heading "Password for all users:" [level=4]
+E       - paragraph: tta_secret
+
+src\tests\test_login.py:30: AssertionError</failure></testcase></testsuite></testsuites>
